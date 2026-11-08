@@ -1,100 +1,87 @@
-# 2-RSS + 1-U 机器人踝关节动力学与运动学验证工作台
+# ANKLE · 2-RSS + 1-U 踝关节工作台
 
-> Robotic Ankle Parallel Mechanism (2-RSS + 1-U) Kinematics & Dynamics Workbench
+面向双侧 RSS 曲柄连杆 + 中央 U 铰踝关节的运动学、静力学与传力特性交互工作台。核心计算与渲染完全模块化，浏览器端零框架依赖，页面可离线运行。
 
-本项目针对人形/双足机器人踝关节经典的 **2-RSS + 1-U 2自由度对称并联机构**，建立了从**解析闭式逆运动学（IK）**、**微分雅可比映射**到**地面支反力（GRF）虚功静力平衡**的完整数学体系，并配套开发了**纯前端交互式 3D 球棍模型验证工作台**与 **Python 动力学算法包**。
+## 特性
 
----
+- **单一数值内核**：闭式逆解（半角代换）、阻尼牛顿正解、任务/驱动雅可比、虚功静力映射，全部集中在 `src/core`，渲染层与 UI 层只消费结果。
+- **规范化类型**：逆解、正解、静力均为判别联合，奇异位形与不收敛状态显式返回，不再出现字段缺失的“半成品”结果。
+- **分层渲染**：纯 Canvas 的 3D 球棍视图、俯仰/横滚工作空间热力图、四张分析曲线，各自独立且共享同一状态快照。
+- **可核对数值**：内置旧版基准夹具，TypeScript 与 Python 两套实现分别对同一组位姿做回归校验。
+- **离线可用**：无 CDN、无外部字体、无 UI 框架；`npm run build` 产物即为完整静态站点。
 
-## 🌟 核心特性
+## 快速开始
 
-- 🎮 **交互式 3D 球棍模型仿真（Vanilla JS Canvas 3D）：**
-  - 无需任何外部三维库，纯原生 Canvas 极速 3D 渲染，支持 360° 自由旋转、平移与缩放。
-  - 完整呈现中心 1-U 虎克铰、2 组 RSS 支链（曲柄、球铰、推拉杆）与足底平板。
-  - 动态可视化地面支反力（GRF）3D 矢量箭头与压力中心（CoP）。
-- ⚡ **解析闭式极速解算（Closed-form IK & Dynamic Statics）：**
-  - **逆运动学（IK）：** 采用半角万能代换直接求得解析解，纳秒级响应，零数值迭代误差（误差 $< 10^{-15}\text{ rad}$）。
-  - **正运动学（FK）：** Newton-Raphson 极速收敛求解。
-  - **静力学映射：** 基于虚功原理 $\boldsymbol{\tau}_{motor} = J_\theta^{-T} \boldsymbol{\tau}_{ankle}$，实时计算任意地面支反力（$F_z, F_x, F_y$）和 CoP 下所需的电机力矩与连杆拉压载荷。
-- 📊 **全行程 4 组联动理性分析曲线：**
-  - ① 运动学映射曲线（$\theta_1, \theta_2 \text{ vs } \text{Pitch}$）
-  - ② 静力学支反力响应曲线（$\tau_1, \tau_2 \text{ vs } \text{Pitch}$）
-  - ③ 传力角品质与死点预警（$\mu_1, \mu_2 \text{ vs } \text{Pitch}$）
-  - ④ 雅可比各向同性与条件数（$\kappa(J_\theta) \text{ vs } \text{Pitch}$）
-- 🛠️ **实时参数化结构设计：**
-  - 支持动态调整曲柄长度 $L_{crank}$、连杆长度 $L_{rod}$、电机轴距 $W_{base}$ 等 8 组关键几何参数，模型与全套曲线毫秒级重算。
-  - 提供标准双足（Balanced）、大扭矩承载（High-Torque）、大行程高速（Agile）三组经典工程预设。
-- 🚶 **正常行走步态循环模拟（Auto Walk Gait Cycle）：**
-  - 内置脚跟触地（Heel-strike）、支撑期（Stance）、前掌蹬离（Push-off）与摆动相（Swing）的连续动态模拟。
-
----
-
-## 📐 机构原理与力学分配
-
-```
-                [ 小腿小腿骨架基座 (Shank Base) ]
-                     │                   │
-         ┌───────────┴───────────┐       │
-         │                       │       │
-    左电机 (M1)              右电机 (M2) │ 
-         │                       │       │
-      曲柄 1                   曲柄 2     │ 
-         │                       │       │
-     球铰 B1                  球铰 B2    ▼
-         │                       │   [ 1-U 虎克铰约束链 ]
-      连杆 1                   连杆 2   (吸收 3向力冲击 + Yaw扭矩)
-         │                       │       ▲
-     球铰 C1                  球铰 C2    │
-         └───────────┬───────────┘       │
-                     ▼                   │
-            [ 足底动平台 (Foot Platform) ]
-                     ▲
-                     │
-             地面支反力 (GRF @ CoP)
-```
-
-1. **1-U 虎克铰承载机制：** 吸收脚掌着地时巨大的 3 向平移冲击力与偏航（Yaw）力矩，直接传递至小腿骨架，保护电机齿轮箱。
-2. **2-RSS 驱动优势：** 电机上置减轻足端摆动惯量；两电机同向转动协同提供大俯仰力矩（Pitch），反向转动提供侧翻平衡力矩（Roll）。
-
----
-
-## 🚀 快速开始
-
-### 1. 运行网页交互工作台
-
-双击或在终端中直接打开 `index.html`：
+前端（Node 20+）：
 
 ```bash
-# macOS
-open index.html
-
-# Linux
-xdg-open index.html
+npm install
+npm run dev      # 本地开发服务器
+npm run build    # 类型检查 + 生产构建，输出 dist/
+npm run verify   # 类型检查 + 全部单元测试
 ```
 
-### 2. 运行 Python 理论与动力学验证脚本
+Python 参考模型（uv 管理，Python 3.11+）：
 
 ```bash
-# 创建虚拟环境并安装依赖
-uv venv
-source .venv/bin/activate
-uv pip install numpy scipy matplotlib
-
-# 运行逆解、正解、数值雅可比差分与虚功守恒断言测试
-python verify_mechanism.py
-
-# 重新生成高清分析曲线图表
-python plot_analysis.py
+uv sync                 # 创建 .venv 并安装 ankle-ref
+uv run ankle-ref verify # 对共享夹具做 46 项数值校验
+uv run ankle-ref pose --pitch 10 --roll 0
+uv run ankle-ref reach --roll 0
 ```
 
----
+## 目录结构
 
-## 📈 分析图表示例
+```
+src/
+  core/        math, mechanism, curves, assessment      # 纯数值，可在 Node 中直接测试
+  state/       store, model                            # 单一可变状态与派生数据
+  render/      scene, pad, chart                       # Canvas 渲染，只读状态
+  ui/          controls, readouts, gait, export        # DOM 绑定与文案
+  styles/      main.css                                # 设计令牌与布局
+  main.ts                                              # 组装与渲染调度
+python/
+  src/ankle_ref/  mechanism.py, cli.py                  # NumPy 参考实现与校验命令
+scripts/
+  gen-reference.mjs                                     # 从旧版页面抽取基准夹具
+tests/
+  core.test.ts, fixtures/legacy-reference.json
+```
 
-![2-RSS+1-U Rational Analysis Curves](ankle_rational_curves.png)
+## 坐标与默认参数
 
----
+基座两点 `A₁/A₂ = [x_base, ±w_base/2, h_base]`，足端两点 `C₁/C₂ = [x_foot, ±w_foot/2, z_foot]` 经 `R = Ry(pitch)·Rx(roll)` 变换。曲柄平面由 `u=[0,1,0]`、`v=[0,0,-1]`、`w=u×v=[-1,0,0]` 张成，`θ=0` 时曲柄竖直向下，中立位 `θ≈+31.2°`，正角为背屈。
 
-## 📄 License
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `w_base` | 70 mm | 基座电机半间距 |
+| `h_base` | 180 mm | 电机轴高度 |
+| `x_base` | −40 mm | 电机轴前后偏置 |
+| `l_crank` | 45 mm | 曲柄长度 |
+| `l_rod` | 165 mm | 连杆长度 |
+| `w_foot` | 60 mm | 足端铰点半间距 |
+| `x_foot` | −30 mm | 足端铰点前后位置 |
+| `z_foot` | −20 mm | 足端铰点高度 |
 
-MIT License
+默认载荷 `Fz=500 N`、`Fx=Fy=0`、`CoP=[80, 0, −60] mm`。死点判据 `|h| < 2 mm`，架构奇异 `|det J_task| < 1e-5`，驱动奇异 `|det J_θ| < 1e-6`。
+
+## 交互
+
+- 3D 视图：拖拽旋转、滚轮缩放；顶部切换等轴/侧/正/俯视，右侧开关坐标系与电机轴。
+- 位姿卡：拖拽热力盘直接设定俯仰与横滚；热力图按几何与载荷缓存，绿色为健康、琥珀为预警、玫红为奇异、暗红为无解。
+- 驱动模式：逆解驱动（位姿 → 电机角）与电机驱动（电机角 → 位姿）。正解报告残差与收敛状态，不收敛时给出提示而不是静默给出错误位姿。
+- 电机角显示：绝对角 / 相对角（相对中立位）。
+- 载荷卡：调节 `Fz/Fx` 与压力中心，四张曲线随载荷即时重算。
+- 顶部按钮：步态演示（30 ms 帧率，支撑相正弦加载与 CoP 平移）、导出 JSON（`ankle-workbench/v2`）、复位姿态。
+
+## 验证
+
+- `npm run verify`：13 个单元测试，覆盖中立角、10 个位姿的逆解与静力、逆解→正解往返、56 点曲线扫掠，误差阈值与旧实现逐项对齐。
+- `uv run ankle-ref verify`：Python 实现独立复算同一夹具的 46 项数值，用于捕捉移植偏差。
+- 夹具来源：`scripts/gen-reference.mjs` 从 `.cache/legacy-index.html` 抽取旧版 `AnkleModel` 生成；旧版页面与构建产物均不参与运行时。
+
+## 说明
+
+- 传力角曲线使用精确 `|h|/|v_crank|`，与旧版 `+1e-9` 分母的差异约 `1e-6°`，测试按 5 位小数比对。
+- 工作空间热力图在 `roll = ±10°` 以上迅速退化为预警/无解，这是 45 mm 曲柄与 165 mm 连杆在此几何下的真实边界，不是渲染误差。
+- 曲线横轴固定为 `pitch ∈ [−30, 25]°`，无解处断线，奇异处条件数按 100 处理。

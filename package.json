@@ -1,0 +1,21 @@
+{
+  "name": "ankle-workbench",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "2-RSS+1-U parallel ankle kinematics and statics workbench",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run check && vitest run"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}
