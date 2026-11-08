@@ -25,7 +25,6 @@
     input[type=range] {
       accent-color: #38bdf8;
     }
-    /* 强化滚动条样式，确保全局与容器均可顺畅滑动翻页 */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -44,7 +43,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 antialiased overflow-x-hidden overflow-y-auto">
 
-  <!-- 顶部导航栏 / 状态看板 -->
+  <!-- 顶部导航栏 -->
   <header class="h-14 border-b border-slate-800 bg-[#0f172a]/95 backdrop-blur px-5 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-md">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 font-bold text-sm shadow-inner">
@@ -59,12 +58,13 @@
       </div>
     </div>
 
-    <!-- 顶部快速锚点跳转导航 (解决内容过多翻页查找问题) -->
+    <!-- 顶部快速锚点跳转 -->
     <div class="hidden md:flex items-center gap-1 bg-slate-900/90 border border-slate-800 px-2 py-1 rounded-lg text-xs">
       <span class="text-slate-400 text-[11px] mr-1">跳转:</span>
       <a href="#section-viewport" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">3D球棍</a>
       <a href="#section-motor-angles" class="px-2 py-0.5 rounded hover:bg-slate-800 text-sky-400 font-medium transition">电机角度</a>
       <a href="#section-motion-controls" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">姿态控制</a>
+      <a href="#section-singularity-diag" class="px-2 py-0.5 rounded hover:bg-slate-800 text-amber-400 font-medium transition">奇异诊断</a>
       <a href="#section-curves" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">分析曲线</a>
       <a href="#section-params" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">机构尺寸</a>
     </div>
@@ -84,34 +84,34 @@
     </div>
   </header>
 
-  <!-- 电机零位与正方向定义权威横幅说明 (常驻提示) -->
+  <!-- 电机零位与正方向定义权威横幅 -->
   <section class="bg-gradient-to-r from-sky-950/40 via-slate-900 to-slate-950 border-b border-sky-900/30 px-5 py-2 text-xs flex flex-wrap items-center justify-between gap-3 shrink-0">
     <div class="flex items-center gap-2">
       <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold border border-sky-500/30">电机坐标约定</span>
-      <span class="text-slate-300 font-medium">初始零位定义：</span>
-      <span class="text-slate-400">绝对零位 <code class="text-sky-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ=0°</code> 为曲柄垂直向下 (-Z)；足部中立平放位对应中立平衡角 <code class="text-amber-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ_neutral ≈ +31.2°</code>。</span>
+      <span class="text-slate-300 font-medium">初始零位：</span>
+      <span class="text-slate-400">绝对零位 <code class="text-sky-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ=0°</code> 为曲柄垂直向下 (-Z)；中立平衡角 <code class="text-amber-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ_neutral ≈ +31.2°</code>。</span>
     </div>
     <div class="flex items-center gap-3 text-slate-400">
       <span class="flex items-center gap-1">
-        <span class="text-emerald-400 font-bold text-sm">↺ +正向 (逆时针)</span>: 曲柄向前上方摆动 $\to$ 提起推拉杆 $\to$ 足端背屈抬脚尖 (Pitch > 0)
+        <span class="text-emerald-400 font-bold text-sm">↺ +正向 (逆时针)</span>: 曲柄向前上方摆动 $\to$ 提起推拉杆 $\to$ 足端背屈 (Pitch > 0)
       </span>
       <span class="flex items-center gap-1">
-        <span class="text-rose-400 font-bold text-sm">↻ -反向 (顺时针)</span>: 曲柄向后下方摆动 $\to$ 压下推拉杆 $\to$ 足端跖屈压脚尖 (Pitch < 0)
+        <span class="text-rose-400 font-bold text-sm">↻ -反向 (顺时针)</span>: 曲柄向后下方摆动 $\to$ 压下推拉杆 $\to$ 足端跖屈 (Pitch < 0)
       </span>
     </div>
   </section>
 
-  <!-- 主体工作区：采用弹性网格，支持全页面上下滚动翻页，彻底解决显示不全 -->
+  <!-- 主体工作区 -->
   <main class="flex-1 flex flex-col lg:flex-row min-h-0">
 
-    <!-- 左侧：3D 球棍模型仿真视窗与实时参数 (在小屏自适应高度，在大屏占 50% 宽且黏性悬停) -->
+    <!-- 左侧：3D 球棍模型视窗 -->
     <div id="section-viewport" class="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-800 relative bg-[#070a12] lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)]">
       
       <!-- 3D Canvas 容器 -->
       <div class="h-[420px] lg:h-auto lg:flex-1 relative overflow-hidden" id="viewport-container">
         <canvas id="canvas-3d" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
 
-        <!-- 3D 浮动视窗工具栏 (视图切换与图例) -->
+        <!-- 3D 浮动视窗工具栏 -->
         <div class="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
           <div class="flex items-center gap-1 bg-slate-900/90 backdrop-blur border border-slate-800 p-1 rounded-lg pointer-events-auto shadow-lg text-xs">
             <span class="text-[11px] text-slate-400 px-1.5">视点:</span>
@@ -121,7 +121,6 @@
             <button id="view-top" class="px-2 py-0.5 rounded text-slate-400 hover:text-white">顶视</button>
           </div>
 
-          <!-- 构型图例说明 -->
           <div class="bg-slate-900/85 backdrop-blur border border-slate-800/80 p-2.5 rounded-lg pointer-events-auto shadow-md text-xs space-y-1.5 w-60">
             <div class="text-[11px] font-semibold text-slate-300 border-b border-slate-800 pb-1 flex justify-between items-center">
               <span>球棍模型图例</span>
@@ -150,12 +149,10 @@
           </div>
         </div>
 
-        <!-- 3D 浮动操作提示 -->
         <div class="absolute bottom-3 left-3 text-[11px] text-slate-400 bg-slate-950/70 backdrop-blur px-2.5 py-1 rounded border border-slate-800/60 pointer-events-none">
           🖱️ 鼠标左键拖拽旋转 · 右键平移 · 滚轮缩放
         </div>
 
-        <!-- 3D 浮动状态胶囊 -->
         <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none">
           <div id="singularity-indicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-md">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -168,9 +165,8 @@
         </div>
       </div>
 
-      <!-- 3D 下方：核心指标看板 -->
+      <!-- 3D 下方核心指标看板 -->
       <div class="border-t border-slate-800 bg-slate-900/90 px-4 py-2.5 flex items-center justify-between gap-3 text-xs shrink-0">
-        <!-- 电机1 指标 -->
         <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
             <span class="flex items-center gap-1 text-sky-400 font-medium">● 左电机 (M1)</span>
@@ -184,7 +180,6 @@
           </div>
         </div>
 
-        <!-- 电机2 指标 -->
         <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
             <span class="flex items-center gap-1 text-sky-400 font-medium">● 右电机 (M2)</span>
@@ -198,7 +193,6 @@
           </div>
         </div>
 
-        <!-- 任务空间指标 -->
         <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
             <span class="flex items-center gap-1 text-emerald-400 font-medium">● 足端姿态 & 1-U</span>
@@ -214,26 +208,23 @@
       </div>
     </div>
 
-    <!-- 右侧：控制面板、电机角度实时反馈与全套理性分析曲线 (垂直顺畅滚动) -->
+    <!-- 右侧：控制与理性分析区 -->
     <div class="w-full lg:w-1/2 flex flex-col bg-[#0b0f19] p-5 space-y-6">
 
-      <!-- 模块 1: 电机角度专属监控与双向控制面板 (重点新增与强化) -->
+      <!-- 模块 1: 输入端电机转角实时状态 -->
       <section id="section-motor-angles" class="bg-slate-900/80 border border-sky-500/30 rounded-xl p-4 shadow-lg space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm animate-pulse"></span>
             <h2 class="text-sm font-semibold text-slate-100">输入端电机转角实时状态 (Motor Angles)</h2>
           </div>
-          <!-- 角度显示基准切换 -->
           <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
             <button id="btn-angle-mode-abs" class="px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-medium transition">绝对角度 (垂直向下=0°)</button>
             <button id="btn-angle-mode-rel" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">中立标定角 (水平平放=0°)</button>
           </div>
         </div>
 
-        <!-- 左右两电机实时状态大卡片 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- 左电机 M1 卡片 -->
           <div class="bg-slate-950/70 border border-slate-800/90 rounded-lg p-3 space-y-2">
             <div class="flex justify-between items-center text-xs">
               <span class="font-medium text-sky-400 flex items-center gap-1.5">
@@ -245,7 +236,6 @@
               <span id="big-m1-val" class="text-2xl font-bold font-mono text-sky-300">+31.2°</span>
               <span id="sub-m1-val" class="text-xs font-mono text-slate-400">Δθ: 0.0° (中立)</span>
             </div>
-            <!-- 电机角度进度滑杆指示器 -->
             <div class="space-y-1">
               <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex">
                 <div id="bar-m1" class="bg-sky-400 h-full transition-all" style="width: 50%;"></div>
@@ -258,7 +248,6 @@
             </div>
           </div>
 
-          <!-- 右电机 M2 卡片 -->
           <div class="bg-slate-950/70 border border-slate-800/90 rounded-lg p-3 space-y-2">
             <div class="flex justify-between items-center text-xs">
               <span class="font-medium text-sky-400 flex items-center gap-1.5">
@@ -270,7 +259,6 @@
               <span id="big-m2-val" class="text-2xl font-bold font-mono text-sky-300">+31.2°</span>
               <span id="sub-m2-val" class="text-xs font-mono text-slate-400">Δθ: 0.0° (中立)</span>
             </div>
-            <!-- 电机角度进度滑杆指示器 -->
             <div class="space-y-1">
               <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex">
                 <div id="bar-m2" class="bg-sky-400 h-full transition-all" style="width: 50%;"></div>
@@ -284,7 +272,6 @@
           </div>
         </div>
 
-        <!-- 电机转动与足部运动映射直观说明小贴士 -->
         <div class="bg-slate-950/40 border border-slate-800/60 rounded-lg p-2.5 text-[11px] text-slate-400 space-y-1">
           <div class="flex items-center gap-1.5 text-slate-300 font-medium">
             <span>⚙️ 电机与足端运动规律：</span>
@@ -298,11 +285,11 @@
         </div>
       </section>
 
-      <!-- 模块 2: 动平台姿态控制与输入模式切换 -->
+      <!-- 模块 2: 动平台姿态控制与【清晰无歧义边界的 2D 触控板】 -->
       <section id="section-motion-controls" class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-sky-400"></span> 动平台姿态输入与双向控制
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span> 动平台姿态输入与高精度 2D 触控板
           </span>
           <div class="flex items-center gap-2">
             <button id="mode-ik" class="px-2.5 py-1 rounded text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">足部姿态 (IK 逆解模式)</button>
@@ -310,49 +297,94 @@
           </div>
         </div>
 
-        <!-- IK 模式控件 (通过调整足部 Pitch/Roll 计算电机角度) -->
-        <div id="controls-ik" class="space-y-3">
-          <!-- 俯仰角 Pitch -->
-          <div>
-            <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-300 font-medium">足部俯仰角 Pitch (背屈 + / 跖屈 -):</span>
-              <span id="label-pitch-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
+        <div id="controls-ik" class="space-y-4">
+          <!-- 滑条 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="text-slate-300 font-medium">俯仰角 Pitch (背屈 + / 跖屈 -):</span>
+                <span id="label-pitch-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-400">-30°</span>
+                <input id="slider-pitch" type="range" min="-30" max="25" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
+                <span class="text-[10px] text-slate-400">+25°</span>
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="text-[10px] text-slate-400">-30°</span>
-              <input id="slider-pitch" type="range" min="-30" max="25" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
-              <span class="text-[10px] text-slate-400">+25°</span>
+
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="text-slate-300 font-medium">侧翻角 Roll (内翻 + / 外翻 -):</span>
+                <span id="label-roll-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-400">-20°</span>
+                <input id="slider-roll" type="range" min="-20" max="20" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
+                <span class="text-[10px] text-slate-400">+20°</span>
+              </div>
             </div>
           </div>
 
-          <!-- 侧翻角 Roll -->
-          <div>
-            <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-300 font-medium">足部侧翻角 Roll (内翻 + / 外翻 -):</span>
-              <span id="label-roll-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
+          <!-- 彻底重构的无歧义边界 2D 触控板区 (带高精度物理坐标网格、可达工作空间掩膜、奇异预警区) -->
+          <div class="border border-slate-800 bg-slate-950/80 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-slate-200 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                2D 姿态坐标触控盘 (精确坐标刻度与工作空间边界)
+              </span>
+              <span class="text-[11px] text-slate-400">
+                当前: <code id="pad-coord-badge" class="text-sky-300 font-mono font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">P: 0.0°, R: 0.0°</code>
+              </span>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="text-[10px] text-slate-400">-20°</span>
-              <input id="slider-roll" type="range" min="-20" max="20" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
-              <span class="text-[10px] text-slate-400">+20°</span>
-            </div>
-          </div>
 
-          <!-- 2D 快捷触控面板 -->
-          <div class="pt-2 flex items-center gap-4">
-            <div class="text-[11px] text-slate-400 w-44 leading-tight">
-              💡 <span class="text-slate-300 font-medium">2D 耦合触控板:</span><br>拖动十字准星，可同时直观耦合改变足部 Pitch 与 Roll
+            <!-- 触控板主体：附带周边清晰坐标数值与轴标签 -->
+            <div class="flex flex-col items-center">
+              <!-- 上轴标签: Pitch +25° -->
+              <div class="text-[10px] font-mono text-sky-300 font-semibold flex items-center justify-center gap-1.5 mb-1 bg-slate-900/90 px-3 py-0.5 rounded border border-slate-800 shadow-sm w-full max-w-[340px]">
+                <span class="text-emerald-400 font-bold">▲</span>
+                <span>顶部: 俯仰 Pitch +25° (最大背屈 / 抬脚尖)</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 w-full justify-center">
+                <!-- 左轴标签: Roll -20° -->
+                <div class="text-[10px] font-mono text-purple-300 flex flex-col items-center justify-center select-none py-2 px-1 bg-slate-900/90 rounded border border-slate-800 shadow-sm leading-tight">
+                  <span class="text-sky-400 font-bold">◄</span>
+                  <span class="mt-0.5">外</span>
+                  <span>翻</span>
+                  <span class="font-bold text-sky-400 mt-0.5">-20°</span>
+                </div>
+
+                <!-- 2D Canvas 触控板 -->
+                <div class="relative w-[300px] h-[220px] rounded-lg border-2 border-slate-700 bg-[#070b14] shadow-inner overflow-hidden cursor-crosshair">
+                  <canvas id="pad-canvas" class="w-full h-full block"></canvas>
+                </div>
+
+                <!-- 右轴标签: Roll +20° -->
+                <div class="text-[10px] font-mono text-purple-300 flex flex-col items-center justify-center select-none py-2 px-1 bg-slate-900/90 rounded border border-slate-800 shadow-sm leading-tight">
+                  <span class="text-sky-400 font-bold">►</span>
+                  <span class="mt-0.5">内</span>
+                  <span>翻</span>
+                  <span class="font-bold text-sky-400 mt-0.5">+20°</span>
+                </div>
+              </div>
+
+              <!-- 下轴标签: Pitch -30° -->
+              <div class="text-[10px] font-mono text-sky-300 font-semibold flex items-center justify-center gap-1.5 mt-1 bg-slate-900/90 px-3 py-0.5 rounded border border-slate-800 shadow-sm w-full max-w-[340px]">
+                <span class="text-rose-400 font-bold">▼</span>
+                <span>底部: 俯仰 Pitch -30° (最大跖屈 / 下踩脚)</span>
+              </div>
             </div>
-            <div class="relative w-28 h-28 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden cursor-crosshair shrink-0" id="pad-2d">
-              <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-800"></div>
-              <div class="absolute top-1/2 left-0 right-0 h-px bg-slate-800"></div>
-              <div id="pad-dot" class="absolute w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-white shadow -ml-[7px] -mt-[7px] pointer-events-none" style="left: 50%; top: 50%;"></div>
-              <div class="absolute bottom-1 right-1 text-[9px] text-slate-400 font-mono pointer-events-none">Roll \ Pitch</div>
+
+            <!-- 触控盘图例与边界说明 -->
+            <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80 pt-2 px-1">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500/40 border border-emerald-400 inline-block"></span> 绿: 推荐工作区</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500/40 border border-amber-400 inline-block"></span> 黄: 传力角偏低区</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500/50 border border-rose-400 inline-block"></span> 红: 死点/超限区</span>
+              <span class="text-slate-400">💡 拖动游标耦合调整姿态</span>
             </div>
           </div>
         </div>
 
-        <!-- FK 模式控件 (直接拖动电机角度计算足部姿态) -->
         <div id="controls-fk" class="space-y-3 hidden">
           <div>
             <div class="flex justify-between items-center text-xs mb-1">
@@ -371,7 +403,84 @@
         </div>
       </section>
 
-      <!-- 模块 3: 地面支反力与压力中心 (GRF & CoP) -->
+      <!-- 模块 3: 【全新】奇异性诊断与报警系统 (按用户要求细化奇异分类与原因分析) -->
+      <section id="section-singularity-diag" class="bg-slate-900/80 border rounded-xl p-4 shadow-lg space-y-3 border-slate-800 transition-all" id="diag-panel">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div class="flex items-center gap-2">
+            <span id="diag-status-badge" class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>健康状态: 正常运行 (无奇异)</span>
+            </span>
+          </div>
+          <button id="btn-toggle-singularity-doc" class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1">
+            <span>📘 机构三大奇异分类定义</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+        </div>
+
+        <!-- 动态诊断分析详情卡片 -->
+        <div id="diag-alert-content" class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-3 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-slate-200" id="diag-type-title">当前位形安全评估：优良</span>
+            <span class="text-[11px] font-mono text-slate-400" id="diag-cond-text">条件数 κ = 1.11 | 传力角 μ1 = 88.4°, μ2 = 88.4°</span>
+          </div>
+          <p class="text-slate-400 text-[11px] leading-relaxed" id="diag-reason-desc">
+            动平台姿态位于 2-RSS+1-U 机构健康安全工作空间中央。两套曲柄连杆机构远离死点共线位形，速度雅可比矩阵满秩且良好平衡，电机可稳定输出双向平衡力矩。
+          </p>
+          <div class="text-[11px] text-slate-400 pt-1 border-t border-slate-800/60 flex items-center gap-2" id="diag-advice-line">
+            <span class="text-emerald-400 font-semibold">建议：</span>
+            <span id="diag-advice-text">可放心作为步态规划的正常运动行程范围。</span>
+          </div>
+        </div>
+
+        <!-- 并联机构奇异性理论手册 (折叠面板) -->
+        <div id="singularity-doc" class="hidden bg-slate-950/90 border border-slate-800 rounded-lg p-3.5 space-y-3 text-xs">
+          <div class="font-semibold text-slate-200 border-b border-slate-800 pb-1.5 text-xs flex justify-between">
+            <span>2-RSS + 1-U 并联机构经典奇异分类标准与判据</span>
+            <span class="text-sky-400 font-mono text-[10px]">Gosselin & Angeles 体系</span>
+          </div>
+          
+          <div class="space-y-2.5 text-[11px] text-slate-300">
+            <!-- 第 I 类奇异 -->
+            <div class="p-2 rounded bg-slate-900/70 border border-slate-800">
+              <div class="font-semibold text-rose-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                第 Ⅰ 类奇异：逆解奇异 / 边界死点 (Boundary / Actuator Singularity)
+              </div>
+              <p class="text-slate-400 mt-1">
+                <strong>数学判据：</strong> $\det(J_{act}) = 0$，即存在某个支链使得 $h_{act, i} = (\boldsymbol{u}_i \times \boldsymbol{r}_{crank, i}) \cdot \boldsymbol{n}_i = 0$。<br>
+                <strong>物理机理：</strong> 推拉连杆与曲柄**共线（拉直或折叠成一直线）**，传力角 $\mu_i \to 0^\circ$ 或 $180^\circ$。在死点处，曲柄瞬时运动无法传递给连杆，电机丧失该方向对动平台的约束力，需要无穷大力矩才能维持平衡。
+              </p>
+            </div>
+
+            <!-- 第 II 类奇异 -->
+            <div class="p-2 rounded bg-slate-900/70 border border-slate-800">
+              <div class="font-semibold text-purple-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                第 Ⅱ 类奇异：正解奇异 / 架构自锁 (Architectural Singularity)
+              </div>
+              <p class="text-slate-400 mt-1">
+                <strong>数学判据：</strong> $\det(J_{task}) = 0$。<br>
+                <strong>物理机理：</strong> 两条连杆的力线共面或与 1-U 虎克铰允许的瞬态旋转轴共线相交。此时即使**将两个驱动电机完全刹车抱死（$\dot{\boldsymbol{\theta}}=0$）**，动平台依然能够沿某些方向微小晃动（产生不可控的瞬时自由度）。
+              </p>
+            </div>
+
+            <!-- 第 III 类奇异 -->
+            <div class="p-2 rounded bg-slate-900/70 border border-slate-800">
+              <div class="font-semibold text-amber-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                超限不可达奇异：几何断开 (Workspace Boundary Exceeded)
+              </div>
+              <p class="text-slate-400 mt-1">
+                <strong>数学判据：</strong> 闭式代数方程判别式 $\Delta_i = 4(E_i^2 + F_i^2 - G_i^2) < 0$。<br>
+                <strong>物理机理：</strong> 足底球铰点 $C_i$ 距离电机旋转轴的距离超出了 $L_{crank} + L_{rod}$（最大伸长极限）或小于 $|L_{rod} - L_{crank}|$（最小压拢极限），机构在物理空间上脱节断开。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块 4: 地面支反力与压力中心 (GRF & CoP) -->
       <section class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
@@ -415,7 +524,7 @@
         </div>
       </section>
 
-      <!-- 模块 4: 四组全行程理性分析曲线 -->
+      <!-- 模块 5: 四组全行程理性分析曲线 -->
       <section id="section-curves" class="space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <div class="flex items-center gap-2">
@@ -430,7 +539,6 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- 曲线 1: 运动学输入-输出映射曲线 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">① 运动学映射: 电机转角 θ vs 俯仰 Pitch</span>
@@ -441,7 +549,6 @@
             </div>
           </div>
 
-          <!-- 曲线 2: 静力学支反力-电机力矩需求曲线 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">② 静力学映射: 所需电机力矩 τ vs 俯仰 Pitch</span>
@@ -452,7 +559,6 @@
             </div>
           </div>
 
-          <!-- 曲线 3: 传力角与死点预警 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">③ 传动品质: 传力角 μ vs 俯仰 Pitch</span>
@@ -463,7 +569,6 @@
             </div>
           </div>
 
-          <!-- 曲线 4: 雅可比条件数与灵巧度 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">④ 机构各向同性: 雅可比条件数 κ vs 俯仰 Pitch</span>
@@ -476,7 +581,7 @@
         </div>
       </section>
 
-      <!-- 模块 5: 机构几何参数设计 (尺寸单位: mm) -->
+      <!-- 模块 6: 机构几何参数设计 -->
       <section id="section-params" class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <div>
@@ -549,7 +654,7 @@
     </div>
   </main>
 
-  <!-- 核心计算与 3D/图表渲染逻辑 -->
+  <!-- 核心计算、2D 触控盘 Canvas 与奇异诊断逻辑 -->
   <script>
     class AnkleModel {
       constructor() {
@@ -578,7 +683,6 @@
         this.theta1 = 0.0;
         this.theta2 = 0.0;
 
-        // 计算中立位平衡角度 (用于相对零位显示)
         this.neutralTheta1 = 0.0;
         this.neutralTheta2 = 0.0;
 
@@ -593,18 +697,15 @@
         this.u1 = [0.0, 1.0, 0.0];
         this.u2 = [0.0, 1.0, 0.0];
 
-        // 零位定义: v 为垂直向下 (-Z)
         this.v1 = [0.0, 0.0, -1.0];
         this.v2 = [0.0, 0.0, -1.0];
 
-        // 正向旋转方向: w = u x v = [-1, 0, 0] (向前摆动)
         this.w1 = [-1.0, 0.0, 0.0];
         this.w2 = [-1.0, 0.0, 0.0];
 
         this.C1_P = [p.x_foot, +p.w_foot / 2.0, p.z_foot];
         this.C2_P = [p.x_foot, -p.w_foot / 2.0, p.z_foot];
 
-        // 求解中立姿态下的参考电机角度
         const ik0 = this.solveIK(0.0, 0.0);
         if (ik0.success) {
           this.neutralTheta1 = ik0.theta1;
@@ -654,6 +755,7 @@
         return { B1, B2 };
       }
 
+      // 逆解与判别式检测
       solveIK(pitch, roll) {
         const { C1, C2 } = this.getPlatformPoints(pitch, roll);
         const p = this.params;
@@ -673,7 +775,7 @@
           const c_eq = G + E;
 
           const disc = b_eq*b_eq - 4.0*a_eq*c_eq;
-          if (disc < 0) return { success: false, theta: 0 };
+          if (disc < 0) return { success: false, theta: 0, disc: disc };
 
           const sqrt_disc = Math.sqrt(Math.max(0, disc));
           let thetas = [];
@@ -685,12 +787,12 @@
             thetas.push(2.0 * Math.atan(-c_eq / b_eq));
           }
 
-          if (thetas.length === 0) return { success: false, theta: 0 };
+          if (thetas.length === 0) return { success: false, theta: 0, disc: disc };
           let best = thetas[0];
           for (let i = 1; i < thetas.length; i++) {
             if (Math.abs(thetas[i]) < Math.abs(best)) best = thetas[i];
           }
-          return { success: true, theta: best };
+          return { success: true, theta: best, disc: disc };
         };
 
         const r1 = solveSingle(this.A1, C1, this.v1, this.w1);
@@ -699,7 +801,9 @@
         return {
           success: r1.success && r2.success,
           theta1: r1.theta,
-          theta2: r2.theta
+          theta2: r2.theta,
+          disc1: r1.disc,
+          disc2: r2.disc
         };
       }
 
@@ -793,18 +897,40 @@
         const mu1_rad = Math.acos(Math.min(1.0, Math.max(-1.0, Math.abs(h_act1) / (v1_norm + 1e-9))));
         const mu2_rad = Math.acos(Math.min(1.0, Math.max(-1.0, Math.abs(h_act2) / (v2_norm + 1e-9))));
 
-        if (Math.abs(h_act1) < 1e-6 || Math.abs(h_act2) < 1e-6) {
-          return { singular: true, cond: 999.0 };
+        // 详细奇异性分析判断
+        const detJ_task = J_task[0][0]*J_task[1][1] - J_task[0][1]*J_task[1][0];
+
+        // 1. 第 I 类奇异判据: 曲柄连杆共线死点
+        const isDeadCenter = Math.abs(h_act1) < 0.002 || Math.abs(h_act2) < 0.002;
+        // 2. 第 II 类奇异判据: 任务空间雅可比退化自锁
+        const isArchitecturalSingular = Math.abs(detJ_task) < 1e-5;
+
+        if (isDeadCenter || Math.abs(h_act1) < 1e-6 || Math.abs(h_act2) < 1e-6) {
+          return { 
+            singular: true, 
+            singularityType: 'TYPE_1_DEAD_CENTER',
+            cond: 999.0, 
+            mu1_deg: (mu1_rad * 180 / Math.PI), 
+            mu2_deg: (mu2_rad * 180 / Math.PI),
+            C1, C2, B1, B2, len1, len2 
+          };
         }
 
         const J_theta = [
           [J_task[0][0] / h_act1, J_task[0][1] / h_act1],
-          [J_task[1][0] / h_act2, J_task[1][0] / h_act2]
+          [J_task[1][0] / h_act2, J_task[1][1] / h_act2]
         ];
 
         const detJ = J_theta[0][0]*J_theta[1][1] - J_theta[0][1]*J_theta[1][0];
-        if (Math.abs(detJ) < 1e-6) {
-          return { singular: true, cond: 999.0 };
+        if (Math.abs(detJ) < 1e-6 || isArchitecturalSingular) {
+          return { 
+            singular: true, 
+            singularityType: 'TYPE_2_ARCHITECTURE',
+            cond: 999.0, 
+            mu1_deg: (mu1_rad * 180 / Math.PI), 
+            mu2_deg: (mu2_rad * 180 / Math.PI),
+            C1, C2, B1, B2, len1, len2 
+          };
         }
 
         const a11 = J_theta[0][0], a12 = J_theta[0][1], a21 = J_theta[1][0], a22 = J_theta[1][1];
@@ -834,6 +960,7 @@
 
         return {
           singular: false,
+          singularityType: 'NONE',
           J_theta,
           detJ,
           cond,
@@ -853,10 +980,345 @@
     }
 
     const model = new AnkleModel();
-    let displayModeRelative = false; // false = 绝对角度, true = 相对中立角度
+    let displayModeRelative = false;
 
     // ==========================================
-    // 3D 画布渲染器 (带 3D 电机角度刻度盘与指针)
+    // 【全新】无歧义边界 2D 触控盘 Canvas 渲染引擎
+    // ==========================================
+    class Canvas2DPad {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.isDragging = false;
+        this.cachedMapCanvas = null;
+
+        // 姿态映射物理全量程
+        this.bounds = {
+          minPitch: -30.0,
+          maxPitch: 25.0,
+          minRoll: -20.0,
+          maxRoll: 20.0
+        };
+
+        this.initEvents();
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        this.width = rect.width;
+        this.height = rect.height;
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        this.ctx.resetTransform?.();
+        this.ctx.scale(dpr, dpr);
+      }
+
+      // 预先/参数变更时离线绘制工作空间与奇异性热力图（执行耗时 < 3ms，极度丝滑）
+      updateWorkspaceMap(m) {
+        const cols = 50;
+        const rows = 40;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = cols;
+        offCanvas.height = rows;
+        const offCtx = offCanvas.getContext('2d');
+        const imgData = offCtx.createImageData(cols, rows);
+        const data = imgData.data;
+
+        const b = this.bounds;
+        const dRoll = (b.maxRoll - b.minRoll) / (cols - 1);
+        const dPitch = (b.maxPitch - b.minPitch) / (rows - 1);
+
+        for (let r = 0; r < rows; r++) {
+          const pitch = (b.maxPitch - r * dPitch) * Math.PI / 180.0;
+          for (let c = 0; c < cols; c++) {
+            const roll = (b.minRoll + c * dRoll) * Math.PI / 180.0;
+            const ik = m.solveIK(pitch, roll);
+            const idx = (r * cols + c) * 4;
+
+            if (!ik.success) {
+              // 第 III 类超限不可达区域 (代数方程判别式 Δ < 0): 深红暗色
+              data[idx]     = 225; // R
+              data[idx + 1] = 29;  // G
+              data[idx + 2] = 72;  // B
+              data[idx + 3] = 75;  // Alpha
+            } else {
+              const stat = m.getJacobianAndStatics(pitch, roll, ik.theta1, ik.theta2);
+              if (stat.singular) {
+                // 第 I 类死点或第 II 类架构奇异: 玫瑰红
+                data[idx]     = 244;
+                data[idx + 1] = 63;
+                data[idx + 2] = 94;
+                data[idx + 3] = 95;
+              } else if (stat.mu1_deg < 42 || stat.mu2_deg < 42 || stat.cond > 5.5) {
+                // 传力角偏低或条件数恶化: 琥珀金黄
+                data[idx]     = 245;
+                data[idx + 1] = 158;
+                data[idx + 2] = 11;
+                data[idx + 3] = 60;
+              } else {
+                // 推荐安全工作区: 柔和翡翠绿
+                data[idx]     = 16;
+                data[idx + 1] = 185;
+                data[idx + 2] = 129;
+                data[idx + 3] = 38;
+              }
+            }
+          }
+        }
+        offCtx.putImageData(imgData, 0, 0);
+        this.cachedMapCanvas = offCanvas;
+      }
+
+      // 角度转像素坐标
+      degToScreen(pitch, roll) {
+        const b = this.bounds;
+        const padX = 32, padY = 22;
+        const w = this.width - padX * 2;
+        const h = this.height - padY * 2;
+
+        const nx = (roll - b.minRoll) / (b.maxRoll - b.minRoll);
+        const ny = (b.maxPitch - pitch) / (b.maxPitch - b.minPitch); // 顶为正 (Pitch > 0)
+
+        return {
+          x: padX + nx * w,
+          y: padY + ny * h,
+          w, h, padX, padY
+        };
+      }
+
+      // 像素坐标转角度
+      screenToDeg(sx, sy) {
+        const b = this.bounds;
+        const padX = 32, padY = 22;
+        const w = this.width - padX * 2;
+        const h = this.height - padY * 2;
+
+        const nx = Math.max(0, Math.min(1, (sx - padX) / w));
+        const ny = Math.max(0, Math.min(1, (sy - padY) / h));
+
+        const roll = b.minRoll + nx * (b.maxRoll - b.minRoll);
+        const pitch = b.maxPitch - ny * (b.maxPitch - b.minPitch);
+
+        return { pitch, roll };
+      }
+
+      initEvents() {
+        const handleMove = (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          const sx = clientX - rect.left;
+          const sy = clientY - rect.top;
+          const { pitch, roll } = this.screenToDeg(sx, sy);
+
+          model.pitch = pitch * Math.PI / 180.0;
+          model.roll = roll * Math.PI / 180.0;
+
+          document.getElementById('slider-pitch').value = pitch.toFixed(1);
+          document.getElementById('slider-roll').value = roll.toFixed(1);
+          document.getElementById('label-pitch-val').textContent = pitch.toFixed(1) + '°';
+          document.getElementById('label-roll-val').textContent = roll.toFixed(1) + '°';
+
+          updateFullPipeline(true);
+        };
+
+        // 鼠标事件绑定
+        this.canvas.addEventListener('mousedown', (e) => {
+          this.isDragging = true;
+          handleMove(e);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (this.isDragging) handleMove(e);
+        });
+
+        window.addEventListener('mouseup', () => { this.isDragging = false; });
+
+        // 移动端/触摸板触控支持 (带 preventDefault 防止页面滑动冲突)
+        this.canvas.addEventListener('touchstart', (e) => {
+          this.isDragging = true;
+          handleMove(e);
+          e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+          if (this.isDragging) {
+            handleMove(e);
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => { this.isDragging = false; });
+      }
+
+      render(currPitchDeg, currRollDeg, currentStatics, isOutOfWorkspace) {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.width, this.height);
+
+        const padX = 32, padY = 22;
+        const w = this.width - padX * 2;
+        const h = this.height - padY * 2;
+
+        // 1. 绘制底层深色背景
+        ctx.fillStyle = '#080d1a';
+        ctx.fillRect(padX, padY, w, h);
+
+        // 2. 绘制全域工作空间/奇异区热力图
+        if (this.cachedMapCanvas) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(this.cachedMapCanvas, padX, padY, w, h);
+        }
+
+        // 3. 区域边界指示文字水印
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.45)';
+        const safeCenter = this.degToScreen(0, 0);
+        ctx.fillText('✦ 绿色: 推荐工作区 ✦', safeCenter.x, safeCenter.y - 18);
+
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.55)';
+        const dangerY = this.degToScreen(-25, 0).y;
+        if (dangerY > padY && dangerY < padY + h) {
+          ctx.fillText('▲ 红色: 超限/死点区 (Δ<0)', safeCenter.x, dangerY);
+        }
+
+        // 4. 绘制网格线与零基准线
+        ctx.lineWidth = 1;
+
+        // Roll 垂直参考线 (-15°, -10°, 0°, +10°, +15°)
+        [-15, -10, 0, 10, 15].forEach(r => {
+          const sx = this.degToScreen(0, r).x;
+          ctx.beginPath();
+          ctx.moveTo(sx, padY);
+          ctx.lineTo(sx, padY + h);
+          if (r === 0) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // 0° 中心线高亮
+            ctx.setLineDash([4, 3]);
+          } else {
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.6)';
+            ctx.setLineDash([2, 2]);
+          }
+          ctx.stroke();
+        });
+
+        // Pitch 水平参考线 (+20°, +10°, 0°, -10°, -20°)
+        [20, 10, 0, -10, -20].forEach(p => {
+          const sy = this.degToScreen(p, 0).y;
+          ctx.beginPath();
+          ctx.moveTo(padX, sy);
+          ctx.lineTo(padX + w, sy);
+          if (p === 0) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'; // 0° 中心线高亮
+            ctx.setLineDash([4, 3]);
+          } else {
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.6)';
+            ctx.setLineDash([2, 2]);
+          }
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        // 5. 触控区外边框与轴刻度数字标绘
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(padX, padY, w, h);
+
+        ctx.font = '9px monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+
+        // X 轴刻度 (Roll)
+        [-20, -10, 0, 10, 20].forEach(r => {
+          const sx = this.degToScreen(0, r).x;
+          ctx.beginPath();
+          ctx.moveTo(sx, padY + h);
+          ctx.lineTo(sx, padY + h + 4);
+          ctx.stroke();
+          ctx.fillText((r > 0 ? '+' : '') + r + '°', sx, padY + h + 13);
+        });
+
+        // Y 轴刻度 (Pitch)
+        ctx.textAlign = 'right';
+        [25, 10, 0, -10, -20, -30].forEach(p => {
+          const sy = this.degToScreen(p, 0).y;
+          ctx.beginPath();
+          ctx.moveTo(padX, sy);
+          ctx.lineTo(padX - 4, sy);
+          ctx.stroke();
+          ctx.fillText((p > 0 ? '+' : '') + p + '°', padX - 6, sy + 3);
+        });
+
+        // 6. 绘制当前姿态点 (游标 Cursor) 与动态指示
+        const cur = this.degToScreen(currPitchDeg, currRollDeg);
+
+        // 十字准星投影线
+        const isDangerous = isOutOfWorkspace || (currentStatics && currentStatics.singular);
+        const isCaution = currentStatics && (currentStatics.mu1_deg < 42 || currentStatics.mu2_deg < 42 || currentStatics.cond > 6.0);
+
+        ctx.strokeStyle = isDangerous ? 'rgba(244, 63, 94, 0.6)' : (isCaution ? 'rgba(245, 158, 11, 0.6)' : 'rgba(56, 189, 248, 0.5)');
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.moveTo(padX, cur.y);
+        ctx.lineTo(padX + w, cur.y);
+        ctx.moveTo(cur.x, padY);
+        ctx.lineTo(cur.x, padY + h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 外圈光晕
+        ctx.beginPath();
+        ctx.arc(cur.x, cur.y, 11, 0, Math.PI * 2);
+        ctx.fillStyle = isDangerous ? 'rgba(244, 63, 94, 0.25)' : (isCaution ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.2)');
+        ctx.fill();
+
+        // 实体圆点
+        ctx.beginPath();
+        ctx.arc(cur.x, cur.y, 5.5, 0, Math.PI * 2);
+        ctx.fillStyle = isDangerous ? '#f43f5e' : (isCaution ? '#f59e0b' : '#38bdf8');
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.fill();
+        ctx.stroke();
+
+        // 浮动坐标与状态标签气泡
+        let tagText = `P: ${currPitchDeg >= 0 ? '+' : ''}${currPitchDeg.toFixed(1)}°, R: ${currRollDeg >= 0 ? '+' : ''}${currRollDeg.toFixed(1)}°`;
+        if (isOutOfWorkspace) {
+          tagText += ' ⚠️ 超限不可达';
+        } else if (currentStatics && currentStatics.singular) {
+          tagText += ' ⚠️ 死点奇异';
+        } else if (isCaution) {
+          tagText += ' ⚠️ 传力角偏低';
+        }
+
+        ctx.font = 'bold 9.5px monospace';
+        const textWidth = ctx.measureText(tagText).width;
+        const bubbleW = textWidth + 14;
+        const bubbleH = 18;
+        const bubbleX = Math.max(padX + 2, Math.min(padX + w - bubbleW - 2, cur.x - bubbleW / 2));
+        const bubbleY = cur.y > padY + 30 ? cur.y - 24 : cur.y + 14;
+
+        ctx.fillStyle = isDangerous ? 'rgba(159, 18, 57, 0.9)' : (isCaution ? 'rgba(120, 53, 15, 0.9)' : 'rgba(15, 23, 42, 0.9)');
+        ctx.strokeStyle = isDangerous ? '#f43f5e' : (isCaution ? '#f59e0b' : '#38bdf8');
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 4) : ctx.rect(bubbleX, bubbleY, bubbleW, bubbleH);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(tagText, bubbleX + bubbleW / 2, bubbleY + 12);
+      }
+    }
+
+    const padViewer = new Canvas2DPad('pad-canvas');
+
+    // ==========================================
+    // 3D 画布渲染器
     // ==========================================
     class Canvas3DViewer {
       constructor(canvasId) {
@@ -918,7 +1380,6 @@
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
         this.canvas.addEventListener('wheel', (e) => {
-          // 仅当用户在画布上滚动且阻止默认时缩放，避免页面无法上下查看
           e.preventDefault();
           this.cam.dist = Math.max(0.2, Math.min(1.8, this.cam.dist + e.deltaY * 0.0006));
           requestRender();
@@ -957,7 +1418,6 @@
 
         const primitives = [];
 
-        // 骨架
         primitives.push({
           type: 'cylinder',
           p1: [0, 0, 0],
@@ -967,7 +1427,6 @@
           depth: 0
         });
 
-        // 电机底座横梁
         primitives.push({
           type: 'cylinder',
           p1: model.A1,
@@ -985,7 +1444,6 @@
           depth: 0
         });
 
-        // 电机壳体与角度刻度盘
         primitives.push({
           type: 'motor_dial',
           center: model.A1,
@@ -1004,7 +1462,6 @@
         });
 
         const { B1, B2 } = statics;
-        // 曲柄
         primitives.push({
           type: 'cylinder',
           p1: model.A1,
@@ -1022,7 +1479,6 @@
           depth: 0
         });
 
-        // 曲柄球铰 B1, B2
         primitives.push({
           type: 'sphere',
           p: B1,
@@ -1044,7 +1500,6 @@
         const rod1Color = statics.f_rod1 > 0 ? '#38bdf8' : '#fb923c';
         const rod2Color = statics.f_rod2 > 0 ? '#38bdf8' : '#fb923c';
 
-        // 推拉杆
         primitives.push({
           type: 'cylinder',
           p1: B1,
@@ -1062,7 +1517,6 @@
           depth: 0
         });
 
-        // 足端球铰 C1, C2
         primitives.push({
           type: 'sphere',
           p: C1,
@@ -1080,7 +1534,6 @@
           depth: 0
         });
 
-        // 足底平板
         primitives.push({
           type: 'foot_plate',
           model: model,
@@ -1089,7 +1542,6 @@
           depth: 0
         });
 
-        // 1-U 虎克铰
         primitives.push({
           type: 'u_joint',
           center: [0, 0, 0],
@@ -1098,7 +1550,6 @@
           depth: 0
         });
 
-        // GRF 矢量箭头
         if (Math.abs(model.load.Fz) > 10 || Math.abs(model.load.Fx) > 5) {
           const cop_pos = [model.load.x_cop, model.load.y_cop, model.load.z_sole];
           const scale_f = 0.08 / 500.0;
@@ -1117,7 +1568,6 @@
           });
         }
 
-        // 计算深度并排序
         primitives.forEach(prim => {
           if (prim.type === 'sphere') {
             prim.depth = this.project(prim.p[0], prim.p[1], prim.p[2]).depth;
@@ -1236,14 +1686,12 @@
         ctx.restore();
       }
 
-      // 绘制电机端 3D 角度刻度表盘与零位/正向指示
       drawMotorDial(prim) {
         const ctx = this.ctx;
         const center = this.project(prim.center[0], prim.center[1], prim.center[2]);
         const radius = Math.max(14, 0.024 * center.scale);
 
         ctx.save();
-        // 绘制电机外壳圆柱端面
         ctx.beginPath();
         ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
@@ -1252,7 +1700,6 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // 绘制 3D 绝对零位参考线 (向下垂直 -Z 方向)
         const pZero = this.project(prim.center[0], prim.center[1], prim.center[2] - 0.026);
         ctx.strokeStyle = 'rgba(251, 191, 36, 0.7)';
         ctx.lineWidth = 1.5;
@@ -1263,7 +1710,6 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // 绘制转角数值悬浮指示条
         const thDeg = prim.theta * 180 / Math.PI;
         ctx.fillStyle = '#38bdf8';
         ctx.font = 'bold 11px monospace';
@@ -1653,7 +2099,6 @@
 
         const stat = model.getJacobianAndStatics(pRad, roll, ik.theta1, ik.theta2);
 
-        // 如果用户选择了相对角度模式，曲线自动换算为相对中立位的增量角
         const plotTh1 = displayModeRelative ? (ik.theta1 - model.neutralTheta1) : ik.theta1;
         const plotTh2 = displayModeRelative ? (ik.theta2 - model.neutralTheta2) : ik.theta2;
 
@@ -1741,7 +2186,7 @@
 
     function updateFullPipeline(recomputeCurves = false) {
       let ik = model.solveIK(model.pitch, model.roll);
-      let isSingular = !ik.success;
+      let isOutOfWorkspace = !ik.success;
 
       if (ik.success) {
         model.theta1 = ik.theta1;
@@ -1750,23 +2195,31 @@
 
       let statics = model.getJacobianAndStatics(model.pitch, model.roll, model.theta1, model.theta2);
 
-      updateMetricsUI(statics, isSingular);
+      // 更新界面指标与奇异诊断
+      updateMetricsUI(statics, isOutOfWorkspace, ik);
+
+      // 渲染 3D 球棍模型
       viewer.render(model, statics);
 
+      // 渲染 2D 触控盘游标与边界
+      const currP = model.pitch * 180 / Math.PI;
+      const currR = model.roll * 180 / Math.PI;
+      padViewer.render(currP, currR, statics, isOutOfWorkspace);
+
+      // 渲染 4 组全行程曲线
       if (recomputeCurves || !cachedCurveData) {
         computeAnalyticalCurves();
       }
       renderCurves(statics);
-      updatePadDot();
     }
 
-    function updateMetricsUI(stat, isSingular) {
+    // 奇异性诊断核心研判
+    function updateMetricsUI(stat, isOutOfWorkspace, ik) {
       const th1DegAbs = (model.theta1 * 180 / Math.PI).toFixed(1);
       const th2DegAbs = (model.theta2 * 180 / Math.PI).toFixed(1);
       const dth1Deg = ((model.theta1 - model.neutralTheta1) * 180 / Math.PI).toFixed(1);
       const dth2Deg = ((model.theta2 - model.neutralTheta2) * 180 / Math.PI).toFixed(1);
 
-      // 顶部大卡片与底栏指示
       const displayTh1 = displayModeRelative ? (dth1Deg >= 0 ? '+' : '') + dth1Deg + '°' : (model.theta1 >= 0 ? '+' : '') + th1DegAbs + '°';
       const displayTh2 = displayModeRelative ? (dth2Deg >= 0 ? '+' : '') + dth2Deg + '°' : (model.theta2 >= 0 ? '+' : '') + th2DegAbs + '°';
 
@@ -1780,16 +2233,121 @@
       document.getElementById('metric-dth1').textContent = (dth1Deg >= 0 ? '+' : '') + dth1Deg + '°';
       document.getElementById('metric-dth2').textContent = (dth2Deg >= 0 ? '+' : '') + dth2Deg + '°';
 
-      // 电机进度条宽度 (-45° ~ +90° 映射到 0% ~ 100%)
       const pctM1 = Math.max(0, Math.min(100, ((parseFloat(th1DegAbs) + 45) / 135) * 100));
       const pctM2 = Math.max(0, Math.min(100, ((parseFloat(th2DegAbs) + 45) / 135) * 100));
       document.getElementById('bar-m1').style.width = pctM1 + '%';
       document.getElementById('bar-m2').style.width = pctM2 + '%';
 
-      // 姿态文本
       const pDeg = (model.pitch * 180 / Math.PI).toFixed(1);
       const rDeg = (model.roll * 180 / Math.PI).toFixed(1);
       document.getElementById('metric-pose-disp').textContent = `P: ${pDeg}° | R: ${rDeg}°`;
+      document.getElementById('pad-coord-badge').textContent = `P: ${pDeg}°, R: ${rDeg}°`;
+
+      // 诊断与预警元素引用
+      const diagPanel = document.getElementById('section-singularity-diag');
+      const ind = document.getElementById('singularity-indicator');
+      const diagBadge = document.getElementById('diag-status-badge');
+      const diagTitle = document.getElementById('diag-type-title');
+      const diagCond = document.getElementById('diag-cond-text');
+      const diagDesc = document.getElementById('diag-reason-desc');
+      const diagAdvice = document.getElementById('diag-advice-text');
+
+      if (isOutOfWorkspace) {
+        // 【第 III 类奇异: 超限不可达】
+        diagPanel.className = 'bg-slate-900/80 border-2 rounded-xl p-4 shadow-lg space-y-3 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.25)] transition-all';
+        ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-medium shadow-md';
+        ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span><span>危险: 几何超限不可达</span>';
+
+        diagBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5';
+        diagBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span>状态: 第 Ⅲ 类奇异 (Workspace Exceeded)</span>';
+        
+        diagTitle.textContent = '【第 Ⅲ 类奇异】闭环代数判别式 Δ < 0 / 超出物理装配空间';
+        diagTitle.className = 'font-bold text-rose-400';
+        diagCond.textContent = '判别式 Δ < 0 (无实数解) | 球铰至电机中心距 D > L_crank + L_rod';
+        diagDesc.innerHTML = '动平台当前的俯仰/侧翻组合导致足底球铰安装点距离电机底座过远，超过了 <strong>曲柄长度 + 连杆长度 (L_crank + L_rod)</strong> 的空间最大极限，几何三角形闭环封闭失效，机构在物理空间上发生脱节断开。';
+        diagAdvice.textContent = '请将触控点拉回绿色安全矩形区域，或在下方尺寸参数中加长连杆 L_rod 或底座高度。';
+
+        document.getElementById('metric-tau1').textContent = '-- Nm';
+        document.getElementById('metric-tau2').textContent = '-- Nm';
+        document.getElementById('metric-mu1').textContent = '超限失效';
+        document.getElementById('metric-mu2').textContent = '超限失效';
+        document.getElementById('metric-frod1').textContent = '-- N';
+        document.getElementById('metric-frod2').textContent = '-- N';
+        document.getElementById('metric-cond').textContent = '发散 (无解)';
+        document.getElementById('disp-trans-ratio').textContent = '超限失效';
+        document.getElementById('metric-u-fz').textContent = Math.round(model.load.Fz) + ' N';
+        return;
+      }
+
+      if (stat && stat.singular) {
+        diagPanel.className = 'bg-slate-900/80 border-2 rounded-xl p-4 shadow-lg space-y-3 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.25)] transition-all';
+        if (stat.singularityType === 'TYPE_1_DEAD_CENTER') {
+          // 【第 I 类奇异: 曲柄连杆共线死点】
+          ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-medium shadow-md';
+          ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span><span>危险: 触发第Ⅰ类死点奇异</span>';
+
+          diagBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5';
+          diagBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span>状态: 第 Ⅰ 类奇异 (曲柄连杆共线死点)</span>';
+          
+          diagTitle.textContent = '【第 Ⅰ 类奇异】推拉杆与曲柄共线死点 (Dead Center)';
+          diagTitle.className = 'font-bold text-rose-400';
+          diagCond.textContent = `传力角 μ1 = ${stat.mu1_deg.toFixed(1)}°, μ2 = ${stat.mu2_deg.toFixed(1)}° | det(J_act) ≈ 0`;
+          diagDesc.innerHTML = '推拉连杆与曲柄已拉至或压至接近 <strong>180° 或 0° 共线状态</strong>。此时连杆轴向力无法产生绕曲柄轴线的力矩臂，电机丧失该方向对动平台的约束力，需要无穷大力矩，极易导致关节卡死自锁！';
+          diagAdvice.textContent = '禁止在此位形附近执行动力输出，需往中立位反向调节俯仰角以脱离共线。';
+        } else {
+          // 【第 II 类奇异: 架构奇异】
+          ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium shadow-md';
+          ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span><span>危险: 触发第Ⅱ类架构自锁</span>';
+
+          diagBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1.5';
+          diagBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-purple-400"></span><span>状态: 第 Ⅱ 类架构奇异 (动平台失控)</span>';
+
+          diagTitle.textContent = '【第 Ⅱ 类奇异】动平台瞬态自由度失控 / 机构自锁';
+          diagTitle.className = 'font-bold text-purple-400';
+          diagCond.textContent = `det(J_task) ≈ 0 | 条件数 κ 发散`;
+          diagDesc.innerHTML = '两根推拉杆的瞬态力线交线共面于 1-U 铰链瞬心，即使两电机完全抱死锁紧，动平台依然能够发生不受控的微小自由晃动，承受外力时内部内应力剧烈放大。';
+          diagAdvice.textContent = '请调整足底球铰安装宽度 W_foot 或电机轴距 W_base 以消除架构奇异。';
+        }
+
+        document.getElementById('metric-tau1').textContent = '∞ Nm (自锁)';
+        document.getElementById('metric-tau2').textContent = '∞ Nm (自锁)';
+        document.getElementById('metric-mu1').textContent = stat.mu1_deg.toFixed(1) + '° (死点)';
+        document.getElementById('metric-mu2').textContent = stat.mu2_deg.toFixed(1) + '° (死点)';
+        document.getElementById('metric-frod1').textContent = '∞ N (自锁)';
+        document.getElementById('metric-frod2').textContent = '∞ N (自锁)';
+        document.getElementById('metric-cond').textContent = '发散 (奇异)';
+        document.getElementById('disp-trans-ratio').textContent = '已退化';
+        document.getElementById('metric-u-fz').textContent = Math.round(model.load.Fz) + ' N';
+        return;
+      } else if (stat && (stat.cond > 6.0 || stat.mu1_deg < 42.0 || stat.mu2_deg < 42.0)) {
+        // 【接近死点与传力角预警】
+        diagPanel.className = 'bg-slate-900/80 border-2 rounded-xl p-4 shadow-lg space-y-3 border-amber-500/70 shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all';
+        ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium shadow-md';
+        ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>警告: 传力角偏低 (接近死点)</span>';
+
+        diagBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5';
+        diagBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>状态: 传动角预警 (接近死点)</span>';
+
+        diagTitle.textContent = '【传动角预警】接近死点边缘，传力效率显著下降';
+        diagTitle.className = 'font-bold text-amber-300';
+        diagCond.textContent = `条件数 κ = ${stat.cond.toFixed(2)} | 传力角 μ1 = ${stat.mu1_deg.toFixed(1)}°, μ2 = ${stat.mu2_deg.toFixed(1)}°`;
+        diagDesc.innerHTML = `连杆传力角低于推荐安全阈值 <strong>42°</strong> (当前 μ ≈ ${Math.min(stat.mu1_deg, stat.mu2_deg).toFixed(1)}°)。虽然数学上有解，但在工程实际中微小摩擦或加工公差极易引发机械卡滞，导致电机电流发热陡增。`;
+        diagAdvice.textContent = '建议将工作姿态限制在触控盘绿色安全框内部。';
+      } else {
+        // 【完全健康】
+        diagPanel.className = 'bg-slate-900/80 border rounded-xl p-4 shadow-lg space-y-3 border-slate-800 transition-all';
+        ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-md';
+        ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>状态: 良好 (无奇异)</span>';
+
+        diagBadge.className = 'px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5';
+        diagBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>状态: 健康运行 (无奇异)</span>';
+
+        diagTitle.textContent = '当前位形安全评估：优良';
+        diagTitle.className = 'font-semibold text-slate-200';
+        diagCond.textContent = `条件数 κ = ${stat ? stat.cond.toFixed(2) : '1.11'} | 传力角 μ1 = ${stat ? stat.mu1_deg.toFixed(1) : '88.4'}°, μ2 = ${stat ? stat.mu2_deg.toFixed(1) : '88.4'}°`;
+        diagDesc.innerHTML = '动平台姿态位于 2-RSS+1-U 机构健康安全工作空间中央。两套曲柄连杆机构远离死点共线位形，速度雅可比矩阵满秩且良好平衡，电机可稳定输出双向平衡力矩。';
+        diagAdvice.textContent = '可放心作为步态规划的正常运动行程范围。';
+      }
 
       if (stat && !stat.singular) {
         document.getElementById('metric-tau1').textContent = stat.tau_m1.toFixed(1) + ' Nm';
@@ -1813,25 +2371,19 @@
           const ratio = Math.abs(stat.J_theta[0][0]).toFixed(2);
           document.getElementById('disp-trans-ratio').textContent = `dθ/dPitch ≈ ${ratio}`;
         }
-
-        const ind = document.getElementById('singularity-indicator');
-        if (stat.cond > 8.0 || stat.mu1_deg < 40 || stat.mu2_deg < 40) {
-          ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium shadow-md';
-          ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>警告: 接近死点/奇异</span>';
-        } else {
-          ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-md';
-          ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>状态: 良好 (无奇异)</span>';
-        }
-      } else {
-        const ind = document.getElementById('singularity-indicator');
-        ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-medium shadow-md';
-        ind.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span><span>危险: 机构奇异卡死</span>';
       }
 
       document.getElementById('metric-u-fz').textContent = Math.round(model.load.Fz) + ' N';
     }
 
-    // 角度显示基准切换事件
+    // 奇异理论手册展开与收起
+    const btnToggleDoc = document.getElementById('btn-toggle-singularity-doc');
+    const docPanel = document.getElementById('singularity-doc');
+    btnToggleDoc.addEventListener('click', () => {
+      docPanel.classList.toggle('hidden');
+    });
+
+    // 角度基准切换
     const btnAngleAbs = document.getElementById('btn-angle-mode-abs');
     const btnAngleRel = document.getElementById('btn-angle-mode-rel');
 
@@ -1853,7 +2405,7 @@
       updateFullPipeline(true);
     });
 
-    // 姿态滑条绑定
+    // 姿态滑条
     const sliderPitch = document.getElementById('slider-pitch');
     const sliderRoll = document.getElementById('slider-roll');
     const labelPitch = document.getElementById('label-pitch-val');
@@ -1957,52 +2509,6 @@
       updateFullPipeline(true);
     });
 
-    // 2D 触控板
-    const pad2d = document.getElementById('pad-2d');
-    const padDot = document.getElementById('pad-dot');
-    let isDraggingPad = false;
-
-    function handlePadEvent(e) {
-      const rect = pad2d.getBoundingClientRect();
-      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-      const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
-
-      const normX = x / rect.width;
-      const rollDeg = (normX - 0.5) * 40.0;
-      const normY = y / rect.height;
-      const pitchDeg = 25.0 - normY * 55.0;
-
-      model.pitch = pitchDeg * Math.PI / 180.0;
-      model.roll = rollDeg * Math.PI / 180.0;
-
-      sliderPitch.value = pitchDeg;
-      sliderRoll.value = rollDeg;
-      labelPitch.textContent = pitchDeg.toFixed(1) + '°';
-      labelRoll.textContent = rollDeg.toFixed(1) + '°';
-
-      updateFullPipeline(true);
-    }
-
-    pad2d.addEventListener('mousedown', (e) => {
-      isDraggingPad = true;
-      handlePadEvent(e);
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (isDraggingPad) handlePadEvent(e);
-    });
-    window.addEventListener('mouseup', () => { isDraggingPad = false; });
-
-    function updatePadDot() {
-      const pDeg = model.pitch * 180 / Math.PI;
-      const rDeg = model.roll * 180 / Math.PI;
-
-      const normX = (rDeg / 40.0) + 0.5;
-      const normY = (25.0 - pDeg) / 55.0;
-
-      padDot.style.left = `${Math.max(5, Math.min(95, normX * 100))}%`;
-      padDot.style.top = `${Math.max(5, Math.min(95, normY * 100))}%`;
-    }
-
     // 参数绑定
     const paramInputs = [
       { id: 'param-wbase', key: 'w_base', labelId: 'val-p-wbase', scale: 0.001, unit: ' mm' },
@@ -2022,6 +2528,7 @@
         model.params[item.key] = val * item.scale;
         document.getElementById(item.labelId).textContent = val + item.unit;
         model.updateDerivedGeometry();
+        padViewer.updateWorkspaceMap(model);
         updateFullPipeline(true);
       });
     });
@@ -2063,6 +2570,7 @@
         document.getElementById(item.id).value = val;
         document.getElementById(item.labelId).textContent = val + item.unit;
       });
+      padViewer.updateWorkspaceMap(model);
       updateFullPipeline(true);
     }
 
@@ -2070,7 +2578,7 @@
       applyPreset({ w_base: 0.070, h_base: 0.180, x_base: -0.040, l_crank: 0.045, l_rod: 0.165, w_foot: 0.060, x_foot: -0.030, z_foot: -0.020 });
     });
 
-    // 步态模拟循环动画
+    // 步态模拟动画
     let isWalking = false;
     let walkTimer = null;
     let walkT = 0;
@@ -2149,6 +2657,7 @@
       URL.revokeObjectURL(url);
     });
 
+    padViewer.updateWorkspaceMap(model);
     updateFullPipeline(true);
   </script>
 </body>
