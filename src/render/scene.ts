@@ -177,8 +177,8 @@ export class SceneView {
     this.joint(A2, COLOR.structure, 4);
 
     if (state.showMotorAxes) {
-      this.drawMotorAxis(A1, B1, theta1, COLOR.motor1);
-      this.drawMotorAxis(A2, B2, theta2, COLOR.motor2);
+      this.drawMotorAxis(A1, B1, theta1, COLOR.motor1, mech.params.chainA.crank);
+      this.drawMotorAxis(A2, B2, theta2, COLOR.motor2, mech.params.chainB.crank);
     }
     if (state.showFrames) this.drawFrames(load.z_sole);
 
@@ -241,32 +241,63 @@ export class SceneView {
   }
 
   private drawBase(A1: Vec3, A2: Vec3): void {
-    const h = A1[2];
-    const top: Vec3[] = [
-      [-0.105, -0.085, h + 0.02],
-      [0.025, -0.085, h + 0.02],
-      [0.025, 0.085, h + 0.02],
-      [-0.105, 0.085, h + 0.02]
-    ];
+    const x0 = -0.105;
+    const x1 = 0.025;
+    const halfY = 0.085;
+    const thickness = 0.02;
     const ctx = this.ctx;
-    ctx.fillStyle = 'rgba(148,163,184,0.07)';
-    this.fillPath(top);
-    ctx.strokeStyle = COLOR.structureDim;
-    ctx.lineWidth = 1.2;
-    this.strokePath([...top, top[0]]);
-    this.strokePath([[top[0][0], top[0][1], h], [top[0][0], top[0][1], h + 0.02]]);
-    this.strokePath([[top[1][0], top[1][1], h], [top[1][0], top[1][1], h + 0.02]]);
-    this.strokePath([[top[2][0], top[2][1], h], [top[2][0], top[2][1], h + 0.02]]);
 
+    // Each motor sits on its own half of the bracket; equal heights merge into
+    // one plate, staggered heights read as a step.
+    const plate = (zTop: number, yInner: number, yOuter: number): void => {
+      const top: Vec3[] = [
+        [x0, yInner, zTop],
+        [x1, yInner, zTop],
+        [x1, yOuter, zTop],
+        [x0, yOuter, zTop]
+      ];
+      ctx.fillStyle = 'rgba(148,163,184,0.07)';
+      this.fillPath(top);
+      ctx.strokeStyle = COLOR.structureDim;
+      ctx.lineWidth = 1.2;
+      this.strokePath([...top, top[0]]);
+      this.strokePath([[x0, yOuter, zTop], [x0, yOuter, zTop - thickness]]);
+      this.strokePath([[x1, yOuter, zTop], [x1, yOuter, zTop - thickness]]);
+      this.strokePath([
+        [x0, yOuter, zTop - thickness],
+        [x1, yOuter, zTop - thickness]
+      ]);
+    };
+
+    const zTopA = A1[2] + thickness;
+    const zTopB = A2[2] + thickness;
+    plate(zTopA, 0, halfY);
+    plate(zTopB, -halfY, 0);
+
+    const zLow = Math.min(zTopA, zTopB);
+    const zHigh = Math.max(zTopA, zTopB);
+    if (zHigh - zLow > 1e-6) {
+      const web: Vec3[] = [
+        [x0, 0, zLow],
+        [x1, 0, zLow],
+        [x1, 0, zHigh],
+        [x0, 0, zHigh]
+      ];
+      ctx.fillStyle = 'rgba(148,163,184,0.12)';
+      this.fillPath(web);
+      ctx.strokeStyle = COLOR.structureDim;
+      this.strokePath([...web, web[0]]);
+    }
+
+    const h = zHigh - thickness;
     this.link([0, 0, h], [0, 0, 0], 'rgba(148,163,184,0.55)', 5);
     this.joint([0, 0, 0], '#94a3b8', 6);
     this.strokePath([[-0.028, 0, 0], [0.028, 0, 0]]);
     this.strokePath([[0, -0.028, 0], [0, 0.028, 0]]);
 
     for (const A of [A1, A2]) {
-      const ctx2 = this.ctx;
-      ctx2.strokeStyle = 'rgba(148,163,184,0.6)';
-      ctx2.lineWidth = 1.4;
+      ctx.strokeStyle = 'rgba(148,163,184,0.6)';
+      ctx.lineWidth = 1.4;
       const half = 0.026;
       this.strokePath([[A[0], A[1] - half, A[2]], [A[0], A[1] + half, A[2]]]);
     }
@@ -307,8 +338,7 @@ export class SceneView {
     this.link(C1, C2, COLOR.platform, 3);
   }
 
-  private drawMotorAxis(A: Vec3, B: Vec3, theta: number, color: string): void {
-    const { mech } = this.frame as WorkbenchState;
+  private drawMotorAxis(A: Vec3, B: Vec3, theta: number, color: string, crank: number): void {
     const axis: Vec3 = [0, 1, 0];
     const half = 0.055;
     const ctx = this.ctx;
@@ -319,7 +349,7 @@ export class SceneView {
     this.strokePath([[A[0], A[1] - half, A[2]], [A[0], A[1] + half, A[2]]]);
     ctx.setLineDash([]);
 
-    const r = mech.params.l_crank * 1.42;
+    const r = crank * 1.42;
     ctx.strokeStyle = 'rgba(148,163,184,0.3)';
     this.strokePath([A, [A[0], A[1], A[2] - r]]);
 

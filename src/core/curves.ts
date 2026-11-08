@@ -46,7 +46,7 @@ export function computeCurves(mech: AnkleMechanism, options: CurveOptions): Curv
     cond: []
   };
 
-  const shift = (theta: number): number => (angleMode === 'rel' ? theta - neutral.theta1 : theta);
+  const shift = (theta: number, reference: number): number => (angleMode === 'rel' ? theta - reference : theta);
 
   for (let pitchDeg = fromDeg; pitchDeg <= toDeg + 1e-9; pitchDeg += stepDeg) {
     const pitch = pitchDeg * DEG;
@@ -67,8 +67,8 @@ export function computeCurves(mech: AnkleMechanism, options: CurveOptions): Curv
     const statics = mech.statics(pitch, roll, ik.theta1, ik.theta2, load);
     const singular = statics.kind === 'singular';
 
-    series.theta1.push(point(singular ? null : shift(ik.theta1) / DEG));
-    series.theta2.push(point(singular ? null : shift(ik.theta2) / DEG));
+    series.theta1.push(point(singular ? null : shift(ik.theta1, neutral.theta1) / DEG));
+    series.theta2.push(point(singular ? null : shift(ik.theta2, neutral.theta2) / DEG));
     series.mu1.push(point(singular ? null : statics.mu1Deg));
     series.mu2.push(point(singular ? null : statics.mu2Deg));
     series.tau1.push(point(statics.kind === 'singular' ? null : statics.tauM1));

@@ -13,7 +13,7 @@ function compactSeries(series: CurveSeries): Record<string, Array<[number, numbe
 export function exportSession(state: WorkbenchState): void {
   const statics = state.statics;
   const payload = {
-    schema: 'ankle-workbench/v2',
+    schema: 'ankle-workbench/v3',
     exportedAt: new Date().toISOString(),
     mechanism: '2-RSS+1-U',
     params: state.params,
@@ -25,7 +25,8 @@ export function exportSession(state: WorkbenchState): void {
       rollDeg: state.rollDeg,
       theta1Deg: state.theta1Deg,
       theta2Deg: state.theta2Deg,
-      neutralThetaDeg: state.neutralThetaDeg
+      neutralTheta1Deg: state.neutralTheta1Deg,
+      neutralTheta2Deg: state.neutralTheta2Deg
     },
     statics:
       statics === null

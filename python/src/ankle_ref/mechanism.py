@@ -24,17 +24,25 @@ SINGULAR_DET = 1e-6
 
 
 @dataclass(frozen=True)
-class Params:
-    """Mechanism geometry in metres."""
+class Chain:
+    """One RSS chain: motor mount point, crank, rod and foot-side anchor."""
 
-    w_base: float = 0.070
-    h_base: float = 0.180
-    x_base: float = -0.040
-    l_crank: float = 0.045
-    l_rod: float = 0.165
-    w_foot: float = 0.060
-    x_foot: float = -0.030
-    z_foot: float = -0.020
+    base: tuple[float, float, float]
+    crank: float
+    rod: float
+    anchor: tuple[float, float, float]
+
+
+_REFERENCE_A = Chain((-0.040, 0.035, 0.180), 0.045, 0.165, (-0.030, 0.030, -0.020))
+_REFERENCE_B = Chain((-0.040, -0.035, 0.180), 0.045, 0.165, (-0.030, -0.030, -0.020))
+
+
+@dataclass(frozen=True)
+class Params:
+    """Both chains; each owns every dimension that defines its side."""
+
+    chain_a: Chain = _REFERENCE_A
+    chain_b: Chain = _REFERENCE_B
 
 
 @dataclass(frozen=True)
@@ -125,41 +133,42 @@ class AnkleMechanism:
 
     def __init__(self, params: Params | None = None) -> None:
         self.params = params or Params()
-        p = self.params
-        self.a1 = np.array([p.x_base, p.w_base / 2.0, p.h_base])
-        self.a2 = np.array([p.x_base, -p.w_base / 2.0, p.h_base])
+        a, b = self.params.chain_a, self.params.chain_b
+        self.a1 = np.array(a.base, dtype=float)
+        self.a2 = np.array(b.base, dtype=float)
         self.u = np.array([0.0, 1.0, 0.0])
         self.v = np.array([0.0, 0.0, -1.0])
         self.w = np.cross(self.u, self.v)
-        self.c1_p = np.array([p.x_foot, p.w_foot / 2.0, p.z_foot])
-        self.c2_p = np.array([p.x_foot, -p.w_foot / 2.0, p.z_foot])
+        self.c1_p = np.array(a.anchor, dtype=float)
+        self.c2_p = np.array(b.anchor, dtype=float)
 
     def platform_points(self, pitch: float, roll: float) -> tuple[Vec3, Vec3]:
         r = rotation_matrix(pitch, roll)
         return r @ self.c1_p, r @ self.c2_p
 
     def crank_tips(self, theta1: float, theta2: float) -> tuple[Vec3, Vec3]:
-        lc = self.params.l_crank
-        b1 = self.a1 + lc * (cos(theta1) * self.v + sin(theta1) * self.w)
-        b2 = self.a2 + lc * (cos(theta2) * self.v + sin(theta2) * self.w)
+        a, b = self.params.chain_a, self.params.chain_b
+        b1 = self.a1 + a.crank * (cos(theta1) * self.v + sin(theta1) * self.w)
+        b2 = self.a2 + b.crank * (cos(theta2) * self.v + sin(theta2) * self.w)
         return b1, b2
 
     def solve_ik(self, pitch: float, roll: float) -> IKResult:
         c1, c2 = self.platform_points(pitch, roll)
-        p = self.params
-        ok1, theta1, disc1 = _solve_chain(c1, self.a1, self.v, self.w, p.l_crank, p.l_rod)
-        ok2, theta2, disc2 = _solve_chain(c2, self.a2, self.v, self.w, p.l_crank, p.l_rod)
+        a, b = self.params.chain_a, self.params.chain_b
+        ok1, theta1, disc1 = _solve_chain(c1, self.a1, self.v, self.w, a.crank, a.rod)
+        ok2, theta2, disc2 = _solve_chain(c2, self.a2, self.v, self.w, b.crank, b.rod)
         return IKResult(ok1 and ok2, theta1, theta2, disc1, disc2)
 
     def solve_fk(self, theta1: float, theta2: float, guess: tuple[float, float] = (0.0, 0.0)) -> FKResult:
         b1, b2 = self.crank_tips(theta1, theta2)
-        l_rod_sq = self.params.l_rod**2
+        rod_sq1 = self.params.chain_a.rod**2
+        rod_sq2 = self.params.chain_b.rod**2
         pitch, roll = guess
         residual = float("inf")
         for _ in range(24):
             c1, c2 = self.platform_points(pitch, roll)
-            f1 = float((c1 - b1) @ (c1 - b1)) - l_rod_sq
-            f2 = float((c2 - b2) @ (c2 - b2)) - l_rod_sq
+            f1 = float((c1 - b1) @ (c1 - b1)) - rod_sq1
+            f2 = float((c2 - b2) @ (c2 - b2)) - rod_sq2
             residual = max(abs(f1), abs(f2))
             if residual < 1e-10:
                 return FKResult(True, pitch, roll, residual)

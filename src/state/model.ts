@@ -1,7 +1,9 @@
 import {
   AnkleMechanism,
+  ChainParams,
+  cloneParams,
   DEFAULT_LOAD,
-  DEFAULT_PARAMS,
+  INITIAL_PARAMS,
   FootLoad,
   IKResult,
   MechanismParams,
@@ -38,6 +40,54 @@ export const POSE_LIMITS = {
   motorMax: 90
 };
 
+export type ChainField = 'baseX' | 'baseY' | 'baseZ' | 'crank' | 'rod' | 'anchorX' | 'anchorY';
+export type SharedField = 'anchorHeight';
+
+const mirrorChain = (c: ChainParams): ChainParams => ({
+  base: [c.base[0], -c.base[1], c.base[2]],
+  crank: c.crank,
+  rod: c.rod,
+  anchor: [c.anchor[0], -c.anchor[1], c.anchor[2]]
+});
+
+function withField(c: ChainParams, field: ChainField, value: number): ChainParams {
+  switch (field) {
+    case 'baseX':
+      return { ...c, base: [value, c.base[1], c.base[2]] };
+    case 'baseY':
+      return { ...c, base: [c.base[0], value, c.base[2]] };
+    case 'baseZ':
+      return { ...c, base: [c.base[0], c.base[1], value] };
+    case 'crank':
+      return { ...c, crank: value };
+    case 'rod':
+      return { ...c, rod: value };
+    case 'anchorX':
+      return { ...c, anchor: [value, c.anchor[1], c.anchor[2]] };
+    case 'anchorY':
+      return { ...c, anchor: [c.anchor[0], value, c.anchor[2]] };
+  }
+}
+
+export function readChainField(c: ChainParams, field: ChainField): number {
+  switch (field) {
+    case 'baseX':
+      return c.base[0];
+    case 'baseY':
+      return c.base[1];
+    case 'baseZ':
+      return c.base[2];
+    case 'crank':
+      return c.crank;
+    case 'rod':
+      return c.rod;
+    case 'anchorX':
+      return c.anchor[0];
+    case 'anchorY':
+      return c.anchor[1];
+  }
+}
+
 export interface WorkbenchState {
   mech: AnkleMechanism;
   params: MechanismParams;
@@ -46,7 +96,9 @@ export interface WorkbenchState {
   rollDeg: number;
   theta1Deg: number;
   theta2Deg: number;
-  neutralThetaDeg: number;
+  neutralTheta1Deg: number;
+  neutralTheta2Deg: number;
+  linkedChains: boolean;
   inputMode: InputMode;
   angleMode: AngleMode;
   showFrames: boolean;
@@ -64,14 +116,16 @@ export interface WorkbenchState {
 }
 
 const initialState = (): WorkbenchState => ({
-  mech: new AnkleMechanism(),
-  params: { ...DEFAULT_PARAMS },
+  mech: new AnkleMechanism(INITIAL_PARAMS),
+  params: cloneParams(INITIAL_PARAMS),
   load: { ...DEFAULT_LOAD },
   pitchDeg: 0,
   rollDeg: 0,
   theta1Deg: 0,
   theta2Deg: 0,
-  neutralThetaDeg: 0,
+  neutralTheta1Deg: 0,
+  neutralTheta2Deg: 0,
+  linkedChains: false,
   inputMode: 'ik',
   angleMode: 'abs',
   showFrames: true,
@@ -152,9 +206,39 @@ export class Workbench {
     this.recompute();
   }
 
-  setParams(patch: Partial<MechanismParams>): void {
-    this.mech.setParams(patch);
-    this.store.update({ params: { ...this.mech.params } });
+  /** Edits one dimension of one chain, mirroring to the other when linked. */
+  setChainParam(chain: 'A' | 'B', field: ChainField, value: number): void {
+    const params = cloneParams(this.state.params);
+    const key = chain === 'A' ? 'chainA' : 'chainB';
+    const other = chain === 'A' ? 'chainB' : 'chainA';
+    params[key] = withField(params[key], field, value);
+    if (this.state.linkedChains) params[other] = mirrorChain(params[key]);
+    this.applyParams(params);
+  }
+
+  /** Rod anchors share the foot-plate top surface. */
+  setSharedParam(field: SharedField, value: number): void {
+    const params = cloneParams(this.state.params);
+    if (field === 'anchorHeight') {
+      params.chainA.anchor[2] = value;
+      params.chainB.anchor[2] = value;
+    }
+    this.applyParams(params);
+  }
+
+  /** Linking copies chain A onto B as a mirror image; turning it off leaves both. */
+  setLinkChains(linked: boolean): void {
+    if (linked === this.state.linkedChains) return;
+    const params = cloneParams(this.state.params);
+    if (linked) params.chainB = mirrorChain(params.chainA);
+    this.mech.setParams(params);
+    this.store.update({ linkedChains: linked, params: cloneParams(this.mech.params) });
+    this.recompute();
+  }
+
+  private applyParams(params: MechanismParams): void {
+    this.mech.setParams(params);
+    this.store.update({ params: cloneParams(this.mech.params) });
     this.recompute();
   }
 
@@ -205,9 +289,7 @@ export class Workbench {
   }
 
   resetParams(): void {
-    this.mech.setParams(DEFAULT_PARAMS);
-    this.store.update({ params: { ...this.mech.params } });
-    this.recompute();
+    this.applyParams(INITIAL_PARAMS);
   }
 
   private recompute(): void {
@@ -259,7 +341,8 @@ export class Workbench {
       rollDeg,
       theta1Deg: deg(theta1),
       theta2Deg: deg(theta2),
-      neutralThetaDeg: deg(neutral.theta1),
+      neutralTheta1Deg: deg(neutral.theta1),
+      neutralTheta2Deg: deg(neutral.theta2),
       ik,
       statics,
       level: classify(statics),

@@ -63,10 +63,11 @@ function levelCopy(state: WorkbenchState): { title: string; advice: string } {
 export function renderReadouts(state: WorkbenchState): void {
   const statics = state.statics;
   const okStatics = statics && statics.kind === 'ok' ? statics : null;
-  const thetaOffset = state.angleMode === 'rel' ? state.neutralThetaDeg : 0;
+  const theta1Offset = state.angleMode === 'rel' ? state.neutralTheta1Deg : 0;
+  const theta2Offset = state.angleMode === 'rel' ? state.neutralTheta2Deg : 0;
 
-  $('m-theta1').textContent = `${signed(state.theta1Deg - thetaOffset)}°`;
-  $('m-theta2').textContent = `${signed(state.theta2Deg - thetaOffset)}°`;
+  $('m-theta1').textContent = `${signed(state.theta1Deg - theta1Offset)}°`;
+  $('m-theta2').textContent = `${signed(state.theta2Deg - theta2Offset)}°`;
   $('m-tau1').textContent = okStatics ? `${signed(okStatics.tauM1)} Nm` : '—';
   $('m-tau2').textContent = okStatics ? `${signed(okStatics.tauM2)} Nm` : '—';
   const mu = statics ? Math.min(statics.mu1Deg, statics.mu2Deg) : null;
@@ -118,7 +119,7 @@ export function renderReadouts(state: WorkbenchState): void {
   const len2 = statics ? statics.rod2[0] ** 2 + statics.rod2[1] ** 2 + statics.rod2[2] ** 2 : null;
   $('rod-lengths').textContent =
     len1 !== null && len2 !== null
-      ? `连杆实长 ${(Math.sqrt(len1) * 1000).toFixed(2)} / ${(Math.sqrt(len2) * 1000).toFixed(2)} mm · 设计 ${(state.params.l_rod * 1000).toFixed(1)} mm`
+      ? `连杆实长 ${(Math.sqrt(len1) * 1000).toFixed(2)} / ${(Math.sqrt(len2) * 1000).toFixed(2)} mm · 设计 ${(state.params.chainA.rod * 1000).toFixed(1)} / ${(state.params.chainB.rod * 1000).toFixed(1)} mm`
       : '连杆实长 —';
 
   $('chart-load-caption').textContent = `Fz ${state.load.Fz.toFixed(0)} N · CoP ${(state.load.x_cop * 1000).toFixed(0)} mm · Roll ${state.rollDeg.toFixed(1)}°`;

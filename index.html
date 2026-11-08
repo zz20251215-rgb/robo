@@ -52,6 +52,96 @@
               <button class="chip" id="btn-toggle-motor-axes" aria-pressed="true">电机轴</button>
             </div>
           </div>
+          <details class="card floating-card" open>
+            <summary>
+              <h2>机构尺寸</h2>
+              <span class="hint">mm</span>
+            </summary>
+            <div class="card-body params">
+              <label class="switch-row" for="link-chains">
+                <input type="checkbox" id="link-chains" />
+                <span>对称联动</span>
+                <small>以 A 链为基准镜像到 B 链</small>
+              </label>
+
+              <p class="param-group">共用基准</p>
+              <div class="field compact">
+                <label for="param-anchor-h">足端铰点高度<output data-param-value="shared.anchorHeight">-20</output></label>
+                <input type="range" id="param-anchor-h" data-param="shared.anchorHeight" min="-50" max="10" step="1" value="-20" />
+              </div>
+
+              <div class="param-grid">
+                <p class="param-group">支链 A · +Y 侧</p>
+                <p class="param-group">支链 B · −Y 侧</p>
+
+                <div class="field compact">
+                  <label for="param-a-mount">安装高度<output data-param-value="A.baseZ">185</output></label>
+                  <input type="range" id="param-a-mount" data-param="A.baseZ" min="110" max="280" step="1" value="185" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-mount">安装高度<output data-param-value="B.baseZ">180</output></label>
+                  <input type="range" id="param-b-mount" data-param="B.baseZ" min="110" max="280" step="1" value="180" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-basex">电机 X<output data-param-value="A.baseX">-40</output></label>
+                  <input type="range" id="param-a-basex" data-param="A.baseX" min="-80" max="20" step="1" value="-40" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-basex">电机 X<output data-param-value="B.baseX">-40</output></label>
+                  <input type="range" id="param-b-basex" data-param="B.baseX" min="-80" max="20" step="1" value="-40" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-basey">电机 Y<output data-param-value="A.baseY">35</output></label>
+                  <input type="range" id="param-a-basey" data-param="A.baseY" min="10" max="80" step="1" value="35" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-basey">电机 Y<output data-param-value="B.baseY">-35</output></label>
+                  <input type="range" id="param-b-basey" data-param="B.baseY" min="-80" max="-10" step="1" value="-35" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-crank">曲柄<output data-param-value="A.crank">45</output></label>
+                  <input type="range" id="param-a-crank" data-param="A.crank" min="25" max="80" step="1" value="45" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-crank">曲柄<output data-param-value="B.crank">45</output></label>
+                  <input type="range" id="param-b-crank" data-param="B.crank" min="25" max="80" step="1" value="45" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-rod">连杆<output data-param-value="A.rod">165</output></label>
+                  <input type="range" id="param-a-rod" data-param="A.rod" min="100" max="260" step="1" value="165" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-rod">连杆<output data-param-value="B.rod">165</output></label>
+                  <input type="range" id="param-b-rod" data-param="B.rod" min="100" max="260" step="1" value="165" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-anchorx">铰点 X<output data-param-value="A.anchorX">-30</output></label>
+                  <input type="range" id="param-a-anchorx" data-param="A.anchorX" min="-60" max="60" step="1" value="-30" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-anchorx">铰点 X<output data-param-value="B.anchorX">-30</output></label>
+                  <input type="range" id="param-b-anchorx" data-param="B.anchorX" min="-60" max="60" step="1" value="-30" />
+                </div>
+
+                <div class="field compact">
+                  <label for="param-a-anchory">铰点 Y<output data-param-value="A.anchorY">30</output></label>
+                  <input type="range" id="param-a-anchory" data-param="A.anchorY" min="10" max="34" step="1" value="30" />
+                </div>
+                <div class="field compact">
+                  <label for="param-b-anchory">铰点 Y<output data-param-value="B.anchorY">-30</output></label>
+                  <input type="range" id="param-b-anchory" data-param="B.anchorY" min="-34" max="-10" step="1" value="-30" />
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn tiny ghost" id="btn-reset-params">恢复默认</button>
+            </div>
+          </details>
           <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
           <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
         </div>
@@ -132,50 +222,6 @@
           <dl class="diag-grid" id="diag-details"></dl>
           <p class="diag-rod mono" id="rod-lengths"></p>
         </section>
-
-        <details class="card" open>
-          <summary>
-            <h2>机构尺寸</h2>
-            <span class="hint">mm</span>
-          </summary>
-          <div class="card-body params">
-            <div class="field compact">
-              <label for="param-wbase">基座半宽<output data-param-value="w_base">70</output></label>
-              <input type="range" id="param-wbase" data-param="w_base" min="40" max="130" step="1" value="70" />
-            </div>
-            <div class="field compact">
-              <label for="param-hbase">电机高度<output data-param-value="h_base">180</output></label>
-              <input type="range" id="param-hbase" data-param="h_base" min="110" max="280" step="1" value="180" />
-            </div>
-            <div class="field compact">
-              <label for="param-xbase">基座前后<output data-param-value="x_base">-40</output></label>
-              <input type="range" id="param-xbase" data-param="x_base" min="-80" max="20" step="1" value="-40" />
-            </div>
-            <div class="field compact">
-              <label for="param-lcrank">曲柄长度<output data-param-value="l_crank">45</output></label>
-              <input type="range" id="param-lcrank" data-param="l_crank" min="25" max="80" step="1" value="45" />
-            </div>
-            <div class="field compact">
-              <label for="param-lrod">连杆长度<output data-param-value="l_rod">165</output></label>
-              <input type="range" id="param-lrod" data-param="l_rod" min="100" max="260" step="1" value="165" />
-            </div>
-            <div class="field compact">
-              <label for="param-wfoot">足端半宽<output data-param-value="w_foot">60</output></label>
-              <input type="range" id="param-wfoot" data-param="w_foot" min="30" max="110" step="1" value="60" />
-            </div>
-            <div class="field compact">
-              <label for="param-xfoot">足端前后<output data-param-value="x_foot">-30</output></label>
-              <input type="range" id="param-xfoot" data-param="x_foot" min="-70" max="20" step="1" value="-30" />
-            </div>
-            <div class="field compact">
-              <label for="param-zfoot">足端高度<output data-param-value="z_foot">-20</output></label>
-              <input type="range" id="param-zfoot" data-param="z_foot" min="-50" max="10" step="1" value="-20" />
-            </div>
-          </div>
-          <div class="card-actions">
-            <button class="btn tiny ghost" id="btn-reset-params">恢复默认</button>
-          </div>
-        </details>
 
         <details class="card">
           <summary>

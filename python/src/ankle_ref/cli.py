@@ -8,14 +8,68 @@ import sys
 from math import degrees, radians
 from pathlib import Path
 
-from .mechanism import AnkleMechanism, Load, Params
+from .mechanism import AnkleMechanism, Chain, Load, Params
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FIXTURE = ROOT / "tests" / "fixtures" / "legacy-reference.json"
 
+ASYM_B = Chain((-0.035, -0.030, 0.180), 0.052, 0.175, (-0.036, -0.026, -0.020))
+
+
+def _mirror(c: Chain) -> Chain:
+    return Chain((c.base[0], -c.base[1], c.base[2]), c.crank, c.rod, (c.anchor[0], -c.anchor[1], c.anchor[2]))
+
 
 def _fmt(value: float, digits: int = 3) -> str:
     return f"{value:.{digits}f}"
+
+
+def _check_asymmetric(failures: list[str]) -> int:
+    """Self-consistency of two genuinely different chains, plus mirror symmetry."""
+    base = Params()
+    reference = AnkleMechanism(base)
+    asym = AnkleMechanism(Params(chain_a=base.chain_a, chain_b=ASYM_B))
+    checks = 0
+
+    ref_ik = reference.solve_ik(radians(10), radians(3))
+    asym_ik = asym.solve_ik(radians(10), radians(3))
+    checks += 1
+    if not asym_ik.ok:
+        failures.append("asymmetric: no IK solution at 10°/3°")
+        return checks
+    checks += 2
+    if abs(asym_ik.theta1 - ref_ik.theta1) > 1e-12:
+        failures.append("asymmetric: chain A theta changed when only chain B dimensions changed")
+    if abs(asym_ik.theta2 - ref_ik.theta2) < 1e-4:
+        failures.append("asymmetric: chain B theta ignored its own dimensions")
+
+    for pitch_deg, roll_deg in ((10.0, 3.0), (0.0, 0.0), (-12.0, -6.0)):
+        ik = asym.solve_ik(radians(pitch_deg), radians(roll_deg))
+        checks += 1
+        if not ik.ok:
+            failures.append(f"asymmetric: IK failed at {pitch_deg:+.0f}/{roll_deg:+.0f}")
+            continue
+        fk = asym.solve_fk(ik.theta1, ik.theta2)
+        checks += 2
+        if not fk.ok or abs(degrees(fk.pitch) - pitch_deg) > 1e-7 or abs(degrees(fk.roll) - roll_deg) > 1e-7:
+            failures.append(f"asymmetric: FK round trip mismatch at {pitch_deg:+.0f}/{roll_deg:+.0f}")
+
+    mirrored = AnkleMechanism(Params(chain_a=_mirror(ASYM_B), chain_b=_mirror(base.chain_a)))
+    ik_a = asym.solve_ik(radians(8), 0.0)
+    ik_b = mirrored.solve_ik(radians(8), 0.0)
+    checks += 1
+    if not (ik_a.ok and ik_b.ok):
+        failures.append("asymmetric: mirror comparison has no IK solution")
+        return checks
+    a = asym.statics(radians(8), 0.0, ik_a.theta1, ik_a.theta2, Load())
+    b = mirrored.statics(radians(8), 0.0, ik_b.theta1, ik_b.theta2, Load())
+    checks += 4
+    if a.kind != "ok" or b.kind != "ok":
+        failures.append("asymmetric: mirror comparison hit a singularity")
+        return checks
+    if abs(a.mu1_deg - b.mu2_deg) > 1e-9 or abs(a.tau_m1 - b.tau_m2) > 1e-9 or abs(a.cond - b.cond) > 1e-9:
+        failures.append("asymmetric: mirrored mechanism is not dynamically equivalent")
+    return checks
 
 
 def verify(fixture: Path) -> int:
@@ -77,6 +131,8 @@ def verify(fixture: Path) -> int:
             failures.append(f"fk pitch {degrees(fk.pitch):.9f} != {row['fkPitchDeg']:.9f}")
         if abs(degrees(fk.roll) - row["fkRollDeg"]) > 1e-6:
             failures.append(f"fk roll {degrees(fk.roll):.9f} != {row['fkRollDeg']:.9f}")
+
+    checks += _check_asymmetric(failures)
 
     print(f"fixture: {fixture}")
     print(f"checks:  {checks}")

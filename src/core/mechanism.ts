@@ -15,27 +15,58 @@ import {
   deg
 } from './math';
 
-export interface MechanismParams {
-  w_base: number;
-  h_base: number;
-  x_base: number;
-  l_crank: number;
-  l_rod: number;
-  w_foot: number;
-  x_foot: number;
-  z_foot: number;
+/**
+ * One of the two symmetric-ish RSS chains. Every dimension belongs to that
+ * chain only; nothing links A to B unless the workbench turns mirroring on.
+ */
+export interface ChainParams {
+  /** Motor axis point on the mounting plane, metres. */
+  base: Vec3;
+  /** Crank radius, metres. */
+  crank: number;
+  /** Connecting-rod length, metres. */
+  rod: number;
+  /** Rod ball joint expressed in the foot frame, metres. */
+  anchor: Vec3;
 }
 
+export interface MechanismParams {
+  chainA: ChainParams;
+  chainB: ChainParams;
+}
+
+const chain = (base: Vec3, crank: number, rod: number, anchor: Vec3): ChainParams => ({
+  base,
+  crank,
+  rod,
+  anchor
+});
+
+/** Defaults reproduce the symmetric reference geometry. */
 export const DEFAULT_PARAMS: MechanismParams = {
-  w_base: 0.07,
-  h_base: 0.18,
-  x_base: -0.04,
-  l_crank: 0.045,
-  l_rod: 0.165,
-  w_foot: 0.06,
-  x_foot: -0.03,
-  z_foot: -0.02
+  chainA: chain([-0.04, 0.035, 0.18], 0.045, 0.165, [-0.03, 0.03, -0.02]),
+  chainB: chain([-0.04, -0.035, 0.18], 0.045, 0.165, [-0.03, -0.03, -0.02])
 };
+
+/**
+ * Workbench start-up geometry: mirrored chains, but the A motor sits on a
+ * higher mounting level. The gap is kept at 5 mm because the transmission
+ * angle of the lower chain falls by roughly 2° per millimetre of drop.
+ */
+export const INITIAL_PARAMS: MechanismParams = {
+  chainA: chain([-0.04, 0.035, 0.185], 0.045, 0.165, [-0.03, 0.03, -0.02]),
+  chainB: chain([-0.04, -0.035, 0.18], 0.045, 0.165, [-0.03, -0.03, -0.02])
+};
+
+export function cloneParams(params: MechanismParams): MechanismParams {
+  const copy = (c: ChainParams): ChainParams => ({
+    base: [...c.base] as Vec3,
+    crank: c.crank,
+    rod: c.rod,
+    anchor: [...c.anchor] as Vec3
+  });
+  return { chainA: copy(params.chainA), chainB: copy(params.chainB) };
+}
 
 export interface FootLoad {
   Fz: number;
@@ -133,16 +164,16 @@ export interface StaticsSingular extends StaticsFrame {
 export type Statics = StaticsOk | StaticsSingular;
 
 function deriveGeometry(p: MechanismParams): MechanismGeometry {
-  const A1: Vec3 = [p.x_base, p.w_base / 2, p.h_base];
-  const A2: Vec3 = [p.x_base, -p.w_base / 2, p.h_base];
+  const A1: Vec3 = [...p.chainA.base];
+  const A2: Vec3 = [...p.chainB.base];
   const u1: Vec3 = [0, 1, 0];
   const u2: Vec3 = [0, 1, 0];
   const v1: Vec3 = [0, 0, -1];
   const v2: Vec3 = [0, 0, -1];
   const w1: Vec3 = cross(u1, v1);
   const w2: Vec3 = cross(u2, v2);
-  const C1_P: Vec3 = [p.x_foot, p.w_foot / 2, p.z_foot];
-  const C2_P: Vec3 = [p.x_foot, -p.w_foot / 2, p.z_foot];
+  const C1_P: Vec3 = [...p.chainA.anchor];
+  const C2_P: Vec3 = [...p.chainB.anchor];
   return { A1, A2, u1, u2, v1, v2, w1, w2, C1_P, C2_P };
 }
 
@@ -205,12 +236,12 @@ export class AnkleMechanism {
   geometry: MechanismGeometry;
 
   constructor(params: MechanismParams = DEFAULT_PARAMS) {
-    this.params = { ...params };
+    this.params = cloneParams(params);
     this.geometry = deriveGeometry(this.params);
   }
 
-  setParams(patch: Partial<MechanismParams>): void {
-    this.params = { ...this.params, ...patch };
+  setParams(next: MechanismParams): void {
+    this.params = cloneParams(next);
     this.geometry = deriveGeometry(this.params);
   }
 
@@ -224,9 +255,12 @@ export class AnkleMechanism {
 
   crankTips(theta1: number, theta2: number): { B1: Vec3; B2: Vec3 } {
     const { A1, A2, u1, u2, v1, v2, w1, w2 } = this.geometry;
-    const tip = (A: Vec3, v: Vec3, w: Vec3, theta: number): Vec3 =>
-      add(A, add(scale(v, this.params.l_crank * Math.cos(theta)), scale(w, this.params.l_crank * Math.sin(theta))));
-    return { B1: tip(A1, v1, w1, theta1), B2: tip(A2, v2, w2, theta2) };
+    const tip = (A: Vec3, v: Vec3, w: Vec3, theta: number, radius: number): Vec3 =>
+      add(A, add(scale(v, radius * Math.cos(theta)), scale(w, radius * Math.sin(theta))));
+    return {
+      B1: tip(A1, v1, w1, theta1, this.params.chainA.crank),
+      B2: tip(A2, v2, w2, theta2, this.params.chainB.crank)
+    };
   }
 
   /** Foot sole outline in platform coordinates. */
@@ -244,9 +278,9 @@ export class AnkleMechanism {
   solveIK(pitch: number, roll: number): IKResult {
     const { C1, C2 } = this.platformPoints(pitch, roll);
     const { A1, A2, v1, v2, w1, w2 } = this.geometry;
-    const p = this.params;
-    const r1 = solveChainIK(C1, A1, v1, w1, p.l_crank, p.l_rod);
-    const r2 = solveChainIK(C2, A2, v2, w2, p.l_crank, p.l_rod);
+    const { chainA, chainB } = this.params;
+    const r1 = solveChainIK(C1, A1, v1, w1, chainA.crank, chainA.rod);
+    const r2 = solveChainIK(C2, A2, v2, w2, chainB.crank, chainB.rod);
 
     if (r1.ok && r2.ok) {
       return { ok: true, theta1: r1.theta, theta2: r2.theta, disc1: r1.disc, disc2: r2.disc };
@@ -261,7 +295,8 @@ export class AnkleMechanism {
    */
   solveFK(theta1: number, theta2: number, guessPitch = 0, guessRoll = 0): FKResult {
     const { B1, B2 } = this.crankTips(theta1, theta2);
-    const lRodSq = this.params.l_rod * this.params.l_rod;
+    const rodSq1 = this.params.chainA.rod ** 2;
+    const rodSq2 = this.params.chainB.rod ** 2;
     let pitch = guessPitch;
     let roll = guessRoll;
     let iterations = 0;
@@ -270,8 +305,8 @@ export class AnkleMechanism {
     for (let i = 0; i < 24; i++) {
       iterations = i + 1;
       const { C1, C2 } = this.platformPoints(pitch, roll);
-      const f1 = dot(sub(C1, B1), sub(C1, B1)) - lRodSq;
-      const f2 = dot(sub(C2, B2), sub(C2, B2)) - lRodSq;
+      const f1 = dot(sub(C1, B1), sub(C1, B1)) - rodSq1;
+      const f2 = dot(sub(C2, B2), sub(C2, B2)) - rodSq2;
       residual = Math.max(Math.abs(f1), Math.abs(f2));
       if (residual < 1e-10) return { ok: true, pitch, roll, residual, iterations };
 

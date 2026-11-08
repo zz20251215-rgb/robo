@@ -1,5 +1,12 @@
-import { FootLoad, MechanismParams } from '../core/mechanism';
-import { Workbench, WorkbenchState, ViewPreset } from '../state/model';
+import { FootLoad } from '../core/mechanism';
+import {
+  ChainField,
+  readChainField,
+  SharedField,
+  ViewPreset,
+  Workbench,
+  WorkbenchState
+} from '../state/model';
 
 export interface ControlHandlers {
   onGait(): void;
@@ -13,10 +20,18 @@ const must = <T extends HTMLElement>(selector: string): T => {
   return element;
 };
 
+function readParam(state: WorkbenchState, key: string): number {
+  const [scope, field] = key.split('.');
+  if (scope === 'shared') return state.params.chainA.anchor[2];
+  const chain = scope === 'A' ? state.params.chainA : state.params.chainB;
+  return readChainField(chain, field as ChainField);
+}
+
 /** Binds declarative controls to workbench intents and mirrors state back. */
 export class Controls {
   private readonly paramInputs: HTMLInputElement[];
   private readonly loadInputs: HTMLInputElement[];
+  private readonly linkToggle: HTMLInputElement;
   private readonly pitch: HTMLInputElement;
   private readonly roll: HTMLInputElement;
   private readonly theta1: HTMLInputElement;
@@ -31,6 +46,7 @@ export class Controls {
   ) {
     this.paramInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-param]')];
     this.loadInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-load]')];
+    this.linkToggle = must('#link-chains');
     this.pitch = must('#slider-pitch');
     this.roll = must('#slider-roll');
     this.theta1 = must('#slider-theta1');
@@ -43,12 +59,13 @@ export class Controls {
 
   sync(state: WorkbenchState): void {
     for (const input of this.paramInputs) {
-      const key = input.dataset.param as keyof MechanismParams;
-      const mm = Math.round(state.params[key] * 1000);
+      const key = input.dataset.param as string;
+      const mm = Math.round(readParam(state, key) * 1000);
       if (input.value !== String(mm)) input.value = String(mm);
       const output = document.querySelector<HTMLElement>(`[data-param-value="${key}"]`);
       if (output) output.textContent = `${mm}`;
     }
+    this.linkToggle.checked = state.linkedChains;
     for (const input of this.loadInputs) {
       const key = input.dataset.load as keyof FootLoad;
       const scale = Number(input.dataset.scale ?? '1');
@@ -88,10 +105,14 @@ export class Controls {
   private bind(): void {
     for (const input of this.paramInputs) {
       input.addEventListener('input', () => {
-        const key = input.dataset.param as keyof MechanismParams;
-        this.wb.setParams({ [key]: Number(input.value) / 1000 } as Partial<MechanismParams>);
+        const [scope, field] = (input.dataset.param as string).split('.');
+        const meters = Number(input.value) / 1000;
+        if (!Number.isFinite(meters)) return;
+        if (scope === 'shared') this.wb.setSharedParam(field as SharedField, meters);
+        else this.wb.setChainParam(scope === 'A' ? 'A' : 'B', field as ChainField, meters);
       });
     }
+    this.linkToggle.addEventListener('change', () => this.wb.setLinkChains(this.linkToggle.checked));
     for (const input of this.loadInputs) {
       const key = input.dataset.load as keyof FootLoad;
       const scale = Number(input.dataset.scale ?? '1');
