@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,61 +16,61 @@
       --accent-rose: #f43f5e;
       --accent-purple: #c084fc;
     }
-    body {
+    html, body {
+      min-height: 100%;
       background-color: var(--bg-color);
       color: #e2e8f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      user-select: none;
     }
     input[type=range] {
       accent-color: #38bdf8;
     }
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    /* 强化滚动条样式，确保全局与容器均可顺畅滑动翻页 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
-    .custom-scroll::-webkit-scrollbar-track {
+    ::-webkit-scrollbar-track {
       background: #0f172a;
     }
-    .custom-scroll::-webkit-scrollbar-thumb {
+    ::-webkit-scrollbar-thumb {
       background: #334155;
-      border-radius: 3px;
+      border-radius: 4px;
     }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.15rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 antialiased overflow-hidden">
+<body class="min-h-screen flex flex-col bg-[#0b0f19] text-slate-100 antialiased overflow-x-hidden overflow-y-auto">
 
   <!-- 顶部导航栏 / 状态看板 -->
-  <header class="h-14 border-b border-slate-800 bg-[#0f172a]/90 backdrop-blur px-5 flex items-center justify-between shrink-0 z-20">
+  <header class="h-14 border-b border-slate-800 bg-[#0f172a]/95 backdrop-blur px-5 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-md">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 font-bold text-sm shadow-inner">
         2R
       </div>
       <div>
         <h1 class="text-sm font-semibold tracking-wide text-slate-100 flex items-center gap-2">
-          2-RSS + 1-U 机器人踝关节动力学与运动学验证工作台
+          2-RSS + 1-U 机器人踝关节验证工作台
           <span class="text-xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">双自由度并联</span>
         </h1>
-        <p class="text-[11px] text-slate-400">实时解析闭式运动学 (IK/FK) · 雅可比速度映射 · 虚功静力学与地表支反力 (GRF) 传递验证</p>
+        <p class="text-[11px] text-slate-400">足端姿态 ↔ 电机转角解析映射 · 运动正逆解 · 虚功静力平衡与支反力 (GRF)</p>
       </div>
     </div>
 
-    <!-- 顶部预设与操作按扭 -->
+    <!-- 顶部快速锚点跳转导航 (解决内容过多翻页查找问题) -->
+    <div class="hidden md:flex items-center gap-1 bg-slate-900/90 border border-slate-800 px-2 py-1 rounded-lg text-xs">
+      <span class="text-slate-400 text-[11px] mr-1">跳转:</span>
+      <a href="#section-viewport" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">3D球棍</a>
+      <a href="#section-motor-angles" class="px-2 py-0.5 rounded hover:bg-slate-800 text-sky-400 font-medium transition">电机角度</a>
+      <a href="#section-motion-controls" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">姿态控制</a>
+      <a href="#section-curves" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">分析曲线</a>
+      <a href="#section-params" class="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 transition">机构尺寸</a>
+    </div>
+
+    <!-- 顶部操作按钮 -->
     <div class="flex items-center gap-2">
-      <div class="flex items-center bg-slate-900/80 p-0.5 rounded-lg border border-slate-800 text-xs">
-        <button id="preset-default" class="px-2.5 py-1 rounded-md text-sky-400 bg-slate-800 font-medium transition hover:text-white">标准双足 (Balanced)</button>
-        <button id="preset-torque" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-sky-300 transition">大扭矩承载 (High-Torque)</button>
-        <button id="preset-speed" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-sky-300 transition">大行程高速 (Agile)</button>
-      </div>
-      <div class="h-4 w-px bg-slate-800 mx-1"></div>
       <button id="btn-auto-walk" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-500/25 transition shadow-sm">
         <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <span id="walk-text">步态模拟</span>
@@ -84,13 +84,31 @@
     </div>
   </header>
 
-  <!-- 主体工作区：左 3D 球棍模型 / 右 控制面板与理性曲线 -->
-  <main class="flex-1 flex overflow-hidden">
+  <!-- 电机零位与正方向定义权威横幅说明 (常驻提示) -->
+  <section class="bg-gradient-to-r from-sky-950/40 via-slate-900 to-slate-950 border-b border-sky-900/30 px-5 py-2 text-xs flex flex-wrap items-center justify-between gap-3 shrink-0">
+    <div class="flex items-center gap-2">
+      <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold border border-sky-500/30">电机坐标约定</span>
+      <span class="text-slate-300 font-medium">初始零位定义：</span>
+      <span class="text-slate-400">绝对零位 <code class="text-sky-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ=0°</code> 为曲柄垂直向下 (-Z)；足部中立平放位对应中立平衡角 <code class="text-amber-300 bg-slate-800 px-1 py-0.5 rounded font-mono">θ_neutral ≈ +31.2°</code>。</span>
+    </div>
+    <div class="flex items-center gap-3 text-slate-400">
+      <span class="flex items-center gap-1">
+        <span class="text-emerald-400 font-bold text-sm">↺ +正向 (逆时针)</span>: 曲柄向前上方摆动 $\to$ 提起推拉杆 $\to$ 足端背屈抬脚尖 (Pitch > 0)
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="text-rose-400 font-bold text-sm">↻ -反向 (顺时针)</span>: 曲柄向后下方摆动 $\to$ 压下推拉杆 $\to$ 足端跖屈压脚尖 (Pitch < 0)
+      </span>
+    </div>
+  </section>
 
-    <!-- 左侧：3D 球棍模型仿真视窗 (占 50% 宽) -->
-    <div class="w-1/2 flex flex-col border-r border-slate-800 relative bg-[#070a12]">
+  <!-- 主体工作区：采用弹性网格，支持全页面上下滚动翻页，彻底解决显示不全 -->
+  <main class="flex-1 flex flex-col lg:flex-row min-h-0">
+
+    <!-- 左侧：3D 球棍模型仿真视窗与实时参数 (在小屏自适应高度，在大屏占 50% 宽且黏性悬停) -->
+    <div id="section-viewport" class="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-800 relative bg-[#070a12] lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)]">
+      
       <!-- 3D Canvas 容器 -->
-      <div class="flex-1 relative overflow-hidden" id="viewport-container">
+      <div class="h-[420px] lg:h-auto lg:flex-1 relative overflow-hidden" id="viewport-container">
         <canvas id="canvas-3d" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
 
         <!-- 3D 浮动视窗工具栏 (视图切换与图例) -->
@@ -104,15 +122,18 @@
           </div>
 
           <!-- 构型图例说明 -->
-          <div class="bg-slate-900/85 backdrop-blur border border-slate-800/80 p-2.5 rounded-lg pointer-events-auto shadow-md text-xs space-y-1.5 w-56">
-            <div class="text-[11px] font-semibold text-slate-300 border-b border-slate-800 pb-1">球棍模型机构图例 (Legend)</div>
+          <div class="bg-slate-900/85 backdrop-blur border border-slate-800/80 p-2.5 rounded-lg pointer-events-auto shadow-md text-xs space-y-1.5 w-60">
+            <div class="text-[11px] font-semibold text-slate-300 border-b border-slate-800 pb-1 flex justify-between items-center">
+              <span>球棍模型图例</span>
+              <span class="text-[10px] text-sky-400">含3D电机角度表盘</span>
+            </div>
             <div class="flex items-center justify-between text-[11px]">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow"></span> 1-U 虎克铰约束中心:</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block shadow"></span> 1-U 虎克铰中心:</span>
               <span class="text-slate-400 font-mono">O(0,0,0)</span>
             </div>
             <div class="flex items-center justify-between text-[11px]">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> 电机输出轴/曲柄 (R副):</span>
-              <span class="text-sky-300 font-mono">A1, A2</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> 电机输出轴/表盘:</span>
+              <span class="text-sky-300 font-mono">A1, A2 (θ1, θ2)</span>
             </div>
             <div class="flex items-center justify-between text-[11px]">
               <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-300 inline-block"></span> 曲柄端球铰 (S副):</span>
@@ -131,10 +152,10 @@
 
         <!-- 3D 浮动操作提示 -->
         <div class="absolute bottom-3 left-3 text-[11px] text-slate-400 bg-slate-950/70 backdrop-blur px-2.5 py-1 rounded border border-slate-800/60 pointer-events-none">
-          🖱️ 鼠标左键拖拽旋转 · 右键/Shift平移 · 滚轮缩放
+          🖱️ 鼠标左键拖拽旋转 · 右键平移 · 滚轮缩放
         </div>
 
-        <!-- 3D 浮动实时状态胶囊 -->
+        <!-- 3D 浮动状态胶囊 -->
         <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none">
           <div id="singularity-indicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-md">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -147,316 +168,259 @@
         </div>
       </div>
 
-      <!-- 3D 下方：核心工程实时参数看板 -->
-      <div class="h-28 border-t border-slate-800 bg-slate-900/90 px-4 py-2 flex items-center justify-between gap-3 text-xs shrink-0">
+      <!-- 3D 下方：核心指标看板 -->
+      <div class="border-t border-slate-800 bg-slate-900/90 px-4 py-2.5 flex items-center justify-between gap-3 text-xs shrink-0">
         <!-- 电机1 指标 -->
-        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 flex flex-col justify-between h-full">
+        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
-            <span class="flex items-center gap-1 text-sky-400 font-medium">● 左电机 (Motor 1)</span>
-            <span class="text-[10px] text-slate-400">RSS 支链 1</span>
+            <span class="flex items-center gap-1 text-sky-400 font-medium">● 左电机 (M1)</span>
+            <span id="metric-th1-disp" class="text-sky-300 font-mono font-semibold">+31.2°</span>
           </div>
-          <div class="grid grid-cols-2 gap-1 font-mono pt-1">
-            <div><span class="text-slate-400 text-[10px]">输入转角 θ1:</span> <span id="metric-th1" class="text-sky-300 font-semibold text-sm">+31.2°</span></div>
-            <div><span class="text-slate-400 text-[10px]">所需力矩 τ1:</span> <span id="metric-tau1" class="text-amber-300 font-semibold text-sm">-18.3 Nm</span></div>
-            <div><span class="text-slate-400 text-[10px]">传力角 μ1:</span> <span id="metric-mu1" class="text-emerald-400 text-xs">88.4°</span></div>
-            <div><span class="text-slate-400 text-[10px]">推拉杆力 F1:</span> <span id="metric-frod1" class="text-slate-200 text-xs">598.7 N</span></div>
+          <div class="grid grid-cols-2 gap-1 font-mono pt-1 text-[11px]">
+            <div><span class="text-slate-400">所需力矩:</span> <span id="metric-tau1" class="text-amber-300 font-semibold">-18.3 Nm</span></div>
+            <div><span class="text-slate-400">传力角:</span> <span id="metric-mu1" class="text-emerald-400">88.4°</span></div>
+            <div><span class="text-slate-400">连杆推力:</span> <span id="metric-frod1" class="text-slate-200">598.7 N</span></div>
+            <div><span class="text-slate-400">相对零位:</span> <span id="metric-dth1" class="text-sky-200">0.0°</span></div>
           </div>
         </div>
 
         <!-- 电机2 指标 -->
-        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 flex flex-col justify-between h-full">
+        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
-            <span class="flex items-center gap-1 text-sky-400 font-medium">● 右电机 (Motor 2)</span>
-            <span class="text-[10px] text-slate-400">RSS 支链 2</span>
+            <span class="flex items-center gap-1 text-sky-400 font-medium">● 右电机 (M2)</span>
+            <span id="metric-th2-disp" class="text-sky-300 font-mono font-semibold">+31.2°</span>
           </div>
-          <div class="grid grid-cols-2 gap-1 font-mono pt-1">
-            <div><span class="text-slate-400 text-[10px]">输入转角 θ2:</span> <span id="metric-th2" class="text-sky-300 font-semibold text-sm">+31.2°</span></div>
-            <div><span class="text-slate-400 text-[10px]">所需力矩 τ2:</span> <span id="metric-tau2" class="text-amber-300 font-semibold text-sm">-18.3 Nm</span></div>
-            <div><span class="text-slate-400 text-[10px]">传力角 μ2:</span> <span id="metric-mu2" class="text-emerald-400 text-xs">88.4°</span></div>
-            <div><span class="text-slate-400 text-[10px]">推拉杆力 F2:</span> <span id="metric-frod2" class="text-slate-200 text-xs">598.7 N</span></div>
+          <div class="grid grid-cols-2 gap-1 font-mono pt-1 text-[11px]">
+            <div><span class="text-slate-400">所需力矩:</span> <span id="metric-tau2" class="text-amber-300 font-semibold">-18.3 Nm</span></div>
+            <div><span class="text-slate-400">传力角:</span> <span id="metric-mu2" class="text-emerald-400">88.4°</span></div>
+            <div><span class="text-slate-400">连杆推力:</span> <span id="metric-frod2" class="text-slate-200">598.7 N</span></div>
+            <div><span class="text-slate-400">相对零位:</span> <span id="metric-dth2" class="text-sky-200">0.0°</span></div>
           </div>
         </div>
 
-        <!-- 足端任务空间与虎克铰指标 -->
-        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 flex flex-col justify-between h-full">
+        <!-- 任务空间指标 -->
+        <div class="flex-1 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex flex-col justify-between">
           <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/60 pb-1">
-            <span class="flex items-center gap-1 text-emerald-400 font-medium">● 踝关节足端 & 1-U 承载</span>
-            <span class="text-[10px] text-slate-400">任务空间</span>
+            <span class="flex items-center gap-1 text-emerald-400 font-medium">● 足端姿态 & 1-U</span>
+            <span class="text-emerald-300 font-mono" id="metric-pose-disp">P: 0.0° | R: 0.0°</span>
           </div>
-          <div class="grid grid-cols-2 gap-1 font-mono pt-1">
-            <div><span class="text-slate-400 text-[10px]">俯仰力矩 τ_pitch:</span> <span id="metric-tau-p" class="text-emerald-300 font-semibold text-sm">-40.0 Nm</span></div>
-            <div><span class="text-slate-400 text-[10px]">侧翻力矩 τ_roll:</span> <span id="metric-tau-r" class="text-emerald-300 font-semibold text-sm">0.0 Nm</span></div>
-            <div><span class="text-slate-400 text-[10px]">雅可比条件数 κ:</span> <span id="metric-cond" class="text-purple-300 text-xs">1.11 (优)</span></div>
-            <div><span class="text-slate-400 text-[10px]">U铰承受竖向力:</span> <span id="metric-u-fz" class="text-slate-200 text-xs">500.0 N</span></div>
+          <div class="grid grid-cols-2 gap-1 font-mono pt-1 text-[11px]">
+            <div><span class="text-slate-400">俯仰力矩:</span> <span id="metric-tau-p" class="text-emerald-300">-40.0 Nm</span></div>
+            <div><span class="text-slate-400">侧翻力矩:</span> <span id="metric-tau-r" class="text-emerald-300">0.0 Nm</span></div>
+            <div><span class="text-slate-400">条件数 κ:</span> <span id="metric-cond" class="text-purple-300">1.11 (优)</span></div>
+            <div><span class="text-slate-400">U铰承压:</span> <span id="metric-u-fz" class="text-slate-200">500 N</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 右侧：控制面板与曲线理性分析区 (占 50% 宽，垂直滚动) -->
-    <div class="w-1/2 flex flex-col bg-[#0b0f19] custom-scroll overflow-y-auto">
+    <!-- 右侧：控制面板、电机角度实时反馈与全套理性分析曲线 (垂直顺畅滚动) -->
+    <div class="w-full lg:w-1/2 flex flex-col bg-[#0b0f19] p-5 space-y-6">
 
-      <!-- 选项卡切换: [姿态与受力控制] / [几何参数调整] -->
-      <div class="border-b border-slate-800 bg-[#0f172a]/95 sticky top-0 z-10 px-5 pt-2 flex items-center justify-between">
-        <div class="flex gap-4">
-          <button id="tab-btn-motion" class="pb-2.5 text-xs font-semibold text-sky-400 border-b-2 border-sky-400 transition flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            姿态与受力动态拖动 (Motion & Load)
-          </button>
-          <button id="tab-btn-params" class="pb-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            机构几何参数设计 (Parametric Design)
-          </button>
-        </div>
-
-        <div class="text-[11px] text-slate-400 pb-2">
-          模式: <span id="ctrl-mode-label" class="text-sky-300 font-mono">足端逆解 (IK)</span>
-        </div>
-      </div>
-
-      <!-- 内容区 1: 姿态与受力控制 -->
-      <div id="tab-content-motion" class="p-5 space-y-4">
-
-        <!-- 姿态调节面板 (Pitch & Roll) -->
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-sky-400"></span> 动平台姿态输入 (足部运动学控制)
-            </span>
-            <div class="flex items-center gap-2">
-              <button id="mode-ik" class="px-2 py-0.5 rounded text-[11px] bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">足部姿态 (IK)</button>
-              <button id="mode-fk" class="px-2 py-0.5 rounded text-[11px] text-slate-400 hover:text-slate-200">电机直驱 (FK)</button>
-            </div>
+      <!-- 模块 1: 电机角度专属监控与双向控制面板 (重点新增与强化) -->
+      <section id="section-motor-angles" class="bg-slate-900/80 border border-sky-500/30 rounded-xl p-4 shadow-lg space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm animate-pulse"></span>
+            <h2 class="text-sm font-semibold text-slate-100">输入端电机转角实时状态 (Motor Angles)</h2>
           </div>
-
-          <!-- IK 模式控件 -->
-          <div id="controls-ik" class="space-y-3">
-            <!-- 俯仰角 Pitch -->
-            <div>
-              <div class="flex justify-between items-center text-xs mb-1">
-                <span class="text-slate-300 font-medium">俯仰角 Pitch (背屈 + / 跖屈 -):</span>
-                <span id="label-pitch-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-[10px] text-slate-400">-30°</span>
-                <input id="slider-pitch" type="range" min="-30" max="25" step="0.5" value="0" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-                <span class="text-[10px] text-slate-400">+25°</span>
-              </div>
-            </div>
-
-            <!-- 侧翻角 Roll -->
-            <div>
-              <div class="flex justify-between items-center text-xs mb-1">
-                <span class="text-slate-300 font-medium">侧翻角 Roll (内翻 + / 外翻 -):</span>
-                <span id="label-roll-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-[10px] text-slate-400">-20°</span>
-                <input id="slider-roll" type="range" min="-20" max="20" step="0.5" value="0" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-                <span class="text-[10px] text-slate-400">+20°</span>
-              </div>
-            </div>
-
-            <!-- 2D 快捷触控面板 -->
-            <div class="pt-2 flex items-center gap-4">
-              <div class="text-[11px] text-slate-400 w-36 leading-tight">
-                💡 <span class="text-slate-300 font-medium">2D 触控盘:</span><br>拖动十字准星直接同时耦合改变 Pitch 与 Roll
-              </div>
-              <div class="relative w-28 h-28 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden cursor-crosshair shrink-0" id="pad-2d">
-                <!-- 中心参考十字线 -->
-                <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-800"></div>
-                <div class="absolute top-1/2 left-0 right-0 h-px bg-slate-800"></div>
-                <!-- 拖动小圆点 -->
-                <div id="pad-dot" class="absolute w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-white shadow -ml-[7px] -mt-[7px] pointer-events-none" style="left: 50%; top: 50%;"></div>
-                <div class="absolute bottom-1 right-1 text-[9px] text-slate-400 font-mono pointer-events-none">Roll \ Pitch</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- FK 模式控件 (隐藏默认) -->
-          <div id="controls-fk" class="space-y-3 hidden">
-            <div>
-              <div class="flex justify-between items-center text-xs mb-1">
-                <span class="text-slate-300 font-medium">左电机转角 θ1:</span>
-                <span id="label-th1-val" class="font-mono text-sky-400 font-semibold text-sm">+31.2°</span>
-              </div>
-              <input id="slider-th1" type="range" min="-45" max="90" step="0.5" value="31.2" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-            </div>
-            <div>
-              <div class="flex justify-between items-center text-xs mb-1">
-                <span class="text-slate-300 font-medium">右电机转角 θ2:</span>
-                <span id="label-th2-val" class="font-mono text-sky-400 font-semibold text-sm">+31.2°</span>
-              </div>
-              <input id="slider-th2" type="range" min="-45" max="90" step="0.5" value="31.2" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-            </div>
+          <!-- 角度显示基准切换 -->
+          <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
+            <button id="btn-angle-mode-abs" class="px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-medium transition">绝对角度 (垂直向下=0°)</button>
+            <button id="btn-angle-mode-rel" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">中立标定角 (水平平放=0°)</button>
           </div>
         </div>
 
-        <!-- 支反力 (GRF) 与压力中心 (CoP) 调节面板 -->
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-rose-500"></span> 地面支反力与压力中心 (Ground Reaction Force & CoP)
-            </span>
-            <span class="text-[11px] text-slate-400">虚功静力平衡映射</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <!-- 竖向支反力 Fz -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">竖向支反力 Fz (支持力):</span>
-                <span id="label-fz-val" class="font-mono text-rose-400 font-semibold">500 N</span>
-              </div>
-              <input id="slider-fz" type="range" min="0" max="1000" step="20" value="500" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                <span>0 N (悬空摆动)</span>
-                <span>500 N (单腿站立)</span>
-                <span>1000 N (冲击)</span>
-              </div>
+        <!-- 左右两电机实时状态大卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 左电机 M1 卡片 -->
+          <div class="bg-slate-950/70 border border-slate-800/90 rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-medium text-sky-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span> 电机 1 (左侧支链)
+              </span>
+              <span id="label-m1-mode-tag" class="text-[10px] text-slate-400 font-mono">绝对角 θ1</span>
             </div>
-
-            <!-- 前后剪切力 Fx -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">前后水平力 Fx (推进/制动):</span>
-                <span id="label-fx-val" class="font-mono text-amber-400 font-semibold">0 N</span>
+            <div class="flex items-baseline justify-between">
+              <span id="big-m1-val" class="text-2xl font-bold font-mono text-sky-300">+31.2°</span>
+              <span id="sub-m1-val" class="text-xs font-mono text-slate-400">Δθ: 0.0° (中立)</span>
+            </div>
+            <!-- 电机角度进度滑杆指示器 -->
+            <div class="space-y-1">
+              <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                <div id="bar-m1" class="bg-sky-400 h-full transition-all" style="width: 50%;"></div>
               </div>
-              <input id="slider-fx" type="range" min="-200" max="200" step="10" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                <span>-200 N (制动)</span>
-                <span>0 N</span>
-                <span>+200 N (前蹬)</span>
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>-45° (下压)</span>
+                <span>0° (竖直)</span>
+                <span>+90° (上提)</span>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-800/60">
-            <!-- 压力中心 CoP X -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">压力中心 X_cop (前后):</span>
-                <span id="label-copx-val" class="font-mono text-sky-400 font-semibold">+80 mm</span>
-              </div>
-              <input id="slider-copx" type="range" min="-60" max="140" step="5" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                <span>-60 mm (脚跟 Heel)</span>
-                <span>0 (踝下)</span>
-                <span>+140 mm (脚尖 Toe)</span>
-              </div>
+          <!-- 右电机 M2 卡片 -->
+          <div class="bg-slate-950/70 border border-slate-800/90 rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-medium text-sky-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span> 电机 2 (右侧支链)
+              </span>
+              <span id="label-m2-mode-tag" class="text-[10px] text-slate-400 font-mono">绝对角 θ2</span>
             </div>
-
-            <!-- 压力中心 CoP Y -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">压力中心 Y_cop (左右偏置):</span>
-                <span id="label-copy-val" class="font-mono text-sky-400 font-semibold">0 mm</span>
+            <div class="flex items-baseline justify-between">
+              <span id="big-m2-val" class="text-2xl font-bold font-mono text-sky-300">+31.2°</span>
+              <span id="sub-m2-val" class="text-xs font-mono text-slate-400">Δθ: 0.0° (中立)</span>
+            </div>
+            <!-- 电机角度进度滑杆指示器 -->
+            <div class="space-y-1">
+              <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                <div id="bar-m2" class="bg-sky-400 h-full transition-all" style="width: 50%;"></div>
               </div>
-              <input id="slider-copy" type="range" min="-30" max="30" step="2" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-              <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                <span>-30 mm (外侧)</span>
-                <span>0 mm (正中)</span>
-                <span>+30 mm (内侧)</span>
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>-45° (下压)</span>
+                <span>0° (竖直)</span>
+                <span>+90° (上提)</span>
               </div>
             </div>
           </div>
         </div>
 
-      </div>
+        <!-- 电机转动与足部运动映射直观说明小贴士 -->
+        <div class="bg-slate-950/40 border border-slate-800/60 rounded-lg p-2.5 text-[11px] text-slate-400 space-y-1">
+          <div class="flex items-center gap-1.5 text-slate-300 font-medium">
+            <span>⚙️ 电机与足端运动规律：</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+            <div>• <strong class="text-sky-300">同向转动 (θ1↑, θ2↑)</strong>：主要输出 <span class="text-slate-200">Pitch 俯仰 (背屈)</span></div>
+            <div>• <strong class="text-amber-300">同向转动 (θ1↓, θ2↓)</strong>：主要输出 <span class="text-slate-200">Pitch 俯仰 (跖屈)</span></div>
+            <div>• <strong class="text-purple-300">差动转动 (θ1↑, θ2↓)</strong>：主要输出 <span class="text-slate-200">Roll 侧翻 (外翻/内翻)</span></div>
+            <div>• <strong class="text-emerald-300">瞬时速度比</strong>：当前 <code id="disp-trans-ratio" class="text-slate-200 font-mono">dθ/dPitch ≈ 1.09</code></div>
+          </div>
+        </div>
+      </section>
 
-      <!-- 内容区 2: 机构几何参数设计 (可动态修改结构尺寸并毫秒级重算) -->
-      <div id="tab-content-params" class="p-5 space-y-4 hidden">
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div>
-              <h3 class="text-xs font-semibold text-slate-200">2-RSS + 1-U 关键机构尺度参数 (尺寸单位: mm)</h3>
-              <p class="text-[11px] text-slate-400">修改任何参数后，3D 模型、正逆解工作空间与全部性能曲线将瞬间自适应重新计算</p>
+      <!-- 模块 2: 动平台姿态控制与输入模式切换 -->
+      <section id="section-motion-controls" class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span> 动平台姿态输入与双向控制
+          </span>
+          <div class="flex items-center gap-2">
+            <button id="mode-ik" class="px-2.5 py-1 rounded text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">足部姿态 (IK 逆解模式)</button>
+            <button id="mode-fk" class="px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200">电机驱动 (FK 正解模式)</button>
+          </div>
+        </div>
+
+        <!-- IK 模式控件 (通过调整足部 Pitch/Roll 计算电机角度) -->
+        <div id="controls-ik" class="space-y-3">
+          <!-- 俯仰角 Pitch -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-300 font-medium">足部俯仰角 Pitch (背屈 + / 跖屈 -):</span>
+              <span id="label-pitch-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
             </div>
-            <button id="btn-reset-params" class="text-xs text-sky-400 hover:text-sky-300">恢复基准参数</button>
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] text-slate-400">-30°</span>
+              <input id="slider-pitch" type="range" min="-30" max="25" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
+              <span class="text-[10px] text-slate-400">+25°</span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4 pt-1">
-            <!-- 电机间距 W_base -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">电机中心间距 W_base:</span>
-                <span id="val-p-wbase" class="font-mono text-sky-400 font-semibold">70 mm</span>
-              </div>
-              <input id="param-wbase" type="range" min="40" max="130" step="2" value="70" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          <!-- 侧翻角 Roll -->
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-300 font-medium">足部侧翻角 Roll (内翻 + / 外翻 -):</span>
+              <span id="label-roll-val" class="font-mono text-sky-400 font-semibold text-sm">0.0°</span>
             </div>
-
-            <!-- 电机安装高度 H_base -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">电机安装高度 H_base:</span>
-                <span id="val-p-hbase" class="font-mono text-sky-400 font-semibold">180 mm</span>
-              </div>
-              <input id="param-hbase" type="range" min="110" max="280" step="5" value="180" class="w-full h-1.5 bg-slate-800 rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] text-slate-400">-20°</span>
+              <input id="slider-roll" type="range" min="-20" max="20" step="0.5" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg cursor-pointer">
+              <span class="text-[10px] text-slate-400">+20°</span>
             </div>
+          </div>
 
-            <!-- 电机前后偏置 X_base -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">电机前后偏置 X_base:</span>
-                <span id="val-p-xbase" class="font-mono text-sky-400 font-semibold">-40 mm</span>
-              </div>
-              <input id="param-xbase" type="range" min="-80" max="20" step="2" value="-40" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          <!-- 2D 快捷触控面板 -->
+          <div class="pt-2 flex items-center gap-4">
+            <div class="text-[11px] text-slate-400 w-44 leading-tight">
+              💡 <span class="text-slate-300 font-medium">2D 耦合触控板:</span><br>拖动十字准星，可同时直观耦合改变足部 Pitch 与 Roll
             </div>
-
-            <!-- 曲柄长度 L_crank -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">曲柄长度 L_crank:</span>
-                <span id="val-p-lcrank" class="font-mono text-sky-400 font-semibold">45 mm</span>
-              </div>
-              <input id="param-lcrank" type="range" min="25" max="80" step="1" value="45" class="w-full h-1.5 bg-slate-800 rounded-lg">
-            </div>
-
-            <!-- 推拉连杆长度 L_rod -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">推拉连杆长度 L_rod:</span>
-                <span id="val-p-lrod" class="font-mono text-sky-400 font-semibold">165 mm</span>
-              </div>
-              <input id="param-lrod" type="range" min="100" max="260" step="2" value="165" class="w-full h-1.5 bg-slate-800 rounded-lg">
-            </div>
-
-            <!-- 足部球铰间距 W_foot -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">足部球铰间距 W_foot:</span>
-                <span id="val-p-wfoot" class="font-mono text-sky-400 font-semibold">60 mm</span>
-              </div>
-              <input id="param-wfoot" type="range" min="30" max="110" step="2" value="60" class="w-full h-1.5 bg-slate-800 rounded-lg">
-            </div>
-
-            <!-- 足部球铰前后偏置 X_foot -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">足部球铰前后偏置 X_foot:</span>
-                <span id="val-p-xfoot" class="font-mono text-sky-400 font-semibold">-30 mm</span>
-              </div>
-              <input id="param-xfoot" type="range" min="-70" max="20" step="2" value="-30" class="w-full h-1.5 bg-slate-800 rounded-lg">
-            </div>
-
-            <!-- 足部球铰垂直偏置 Z_foot -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">足部球铰下沉 Z_foot:</span>
-                <span id="val-p-zfoot" class="font-mono text-sky-400 font-semibold">-20 mm</span>
-              </div>
-              <input id="param-zfoot" type="range" min="-50" max="10" step="2" value="-20" class="w-full h-1.5 bg-slate-800 rounded-lg">
+            <div class="relative w-28 h-28 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden cursor-crosshair shrink-0" id="pad-2d">
+              <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-800"></div>
+              <div class="absolute top-1/2 left-0 right-0 h-px bg-slate-800"></div>
+              <div id="pad-dot" class="absolute w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-white shadow -ml-[7px] -mt-[7px] pointer-events-none" style="left: 50%; top: 50%;"></div>
+              <div class="absolute bottom-1 right-1 text-[9px] text-slate-400 font-mono pointer-events-none">Roll \ Pitch</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 下部：理性分析曲线区 (4 张联动图表) -->
-      <div class="px-5 pb-6 space-y-4">
+        <!-- FK 模式控件 (直接拖动电机角度计算足部姿态) -->
+        <div id="controls-fk" class="space-y-3 hidden">
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-300 font-medium">输入左电机角度 θ1:</span>
+              <span id="label-th1-val" class="font-mono text-sky-400 font-semibold text-sm">+31.2°</span>
+            </div>
+            <input id="slider-th1" type="range" min="-45" max="90" step="0.5" value="31.2" class="w-full h-2 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-300 font-medium">输入右电机角度 θ2:</span>
+              <span id="label-th2-val" class="font-mono text-sky-400 font-semibold text-sm">+31.2°</span>
+            </div>
+            <input id="slider-th2" type="range" min="-45" max="90" step="0.5" value="31.2" class="w-full h-2 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块 3: 地面支反力与压力中心 (GRF & CoP) -->
+      <section class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span> 地面支反力与压力中心 (GRF & CoP)
+          </span>
+          <span class="text-[11px] text-slate-400">虚功静力平衡映射</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">竖向支反力 Fz (支持力):</span>
+              <span id="label-fz-val" class="font-mono text-rose-400 font-semibold">500 N</span>
+            </div>
+            <input id="slider-fz" type="range" min="0" max="1000" step="20" value="500" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">前后剪切力 Fx (推进/制动):</span>
+              <span id="label-fx-val" class="font-mono text-amber-400 font-semibold">0 N</span>
+            </div>
+            <input id="slider-fx" type="range" min="-200" max="200" step="10" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-800/60">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">压力中心 X_cop (前后):</span>
+              <span id="label-copx-val" class="font-mono text-sky-400 font-semibold">+80 mm</span>
+            </div>
+            <input id="slider-copx" type="range" min="-60" max="140" step="5" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">压力中心 Y_cop (左右偏置):</span>
+              <span id="label-copy-val" class="font-mono text-sky-400 font-semibold">0 mm</span>
+            </div>
+            <input id="slider-copy" type="range" min="-30" max="30" step="2" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块 4: 四组全行程理性分析曲线 -->
+      <section id="section-curves" class="space-y-4">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-sm bg-sky-400 inline-block"></span>
-            <h2 class="text-xs font-semibold text-slate-200">全行程理性分析曲线 (全范围 Pitch 扫描，当前 Roll=<span id="curve-curr-roll" class="text-sky-300 font-mono">0.0°</span>)</h2>
+            <h2 class="text-sm font-semibold text-slate-100">全行程理性分析曲线 (全范围 Pitch 扫描，当前 Roll=<span id="curve-curr-roll" class="text-sky-300 font-mono">0.0°</span>)</h2>
           </div>
           <div class="text-[11px] text-slate-400 flex items-center gap-2">
             <span class="flex items-center gap-1"><span class="w-2 h-0.5 bg-sky-400 inline-block"></span> 电机1</span>
@@ -465,31 +429,30 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-
-          <!-- 曲线 1: 运动学输入-输出映射曲线 (Motor Angles vs Pitch) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- 曲线 1: 运动学输入-输出映射曲线 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">① 运动学映射: 电机转角 θ vs 俯仰 Pitch</span>
-              <span class="text-[10px] text-slate-400">斜率 = 传动速度比</span>
+              <span class="text-[10px] text-slate-400">斜率 = 瞬时传动比</span>
             </div>
             <div class="h-44 w-full relative">
               <canvas id="chart-kinematics" class="w-full h-full block"></canvas>
             </div>
           </div>
 
-          <!-- 曲线 2: 静力学支反力-电机力矩需求曲线 (Motor Torque vs Pitch) -->
+          <!-- 曲线 2: 静力学支反力-电机力矩需求曲线 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">② 静力学映射: 所需电机力矩 τ vs 俯仰 Pitch</span>
-              <span class="text-[10px] text-slate-400">当前 Fz=<span id="curve-curr-fz">500</span>N 载荷</span>
+              <span class="text-[10px] text-slate-400">当前 Fz=<span id="curve-curr-fz">500</span>N</span>
             </div>
             <div class="h-44 w-full relative">
               <canvas id="chart-statics" class="w-full h-full block"></canvas>
             </div>
           </div>
 
-          <!-- 曲线 3: 传力角与死点预警 (Transmission Angle vs Pitch) -->
+          <!-- 曲线 3: 传力角与死点预警 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">③ 传动品质: 传力角 μ vs 俯仰 Pitch</span>
@@ -500,7 +463,7 @@
             </div>
           </div>
 
-          <!-- 曲线 4: 雅可比条件数与灵巧度 (Condition Number vs Pitch) -->
+          <!-- 曲线 4: 雅可比条件数与灵巧度 -->
           <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 shadow-sm flex flex-col">
             <div class="flex justify-between items-center text-xs mb-2">
               <span class="font-medium text-slate-200">④ 机构各向同性: 雅可比条件数 κ vs 俯仰 Pitch</span>
@@ -510,90 +473,148 @@
               <canvas id="chart-dexterity" class="w-full h-full block"></canvas>
             </div>
           </div>
+        </div>
+      </section>
 
+      <!-- 模块 5: 机构几何参数设计 (尺寸单位: mm) -->
+      <section id="section-params" class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div>
+            <h3 class="text-xs font-semibold text-slate-200">2-RSS + 1-U 关键机构尺度参数 (尺寸单位: mm)</h3>
+            <p class="text-[11px] text-slate-400">拖动任何尺寸，3D 模型、正逆解工作空间与全部性能曲线瞬间自适应重新计算</p>
+          </div>
+          <button id="btn-reset-params" class="text-xs text-sky-400 hover:text-sky-300">恢复基准参数</button>
         </div>
 
-        <!-- 总结说明便签 -->
-        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-[11px] text-slate-400 flex items-start gap-2.5">
-          <div class="text-sky-400 text-base leading-none">ℹ️</div>
-          <div class="space-y-1">
-            <div class="text-slate-300 font-medium">设计分析导读：</div>
-            <p>1. <strong>1-U 支链承载机制：</strong> 地面垂直冲击力 $F_z$ 和偏航扭矩主要由中间的虎克铰刚性吸收；两套 RSS 驱动支链仅需承担矢状面俯仰力矩和冠状面侧翻力矩，有效保护电机减速器。</p>
-            <p>2. <strong>曲柄连杆传动死点：</strong> 当曲柄与推拉杆接近共线（传力角 $\mu \to 0^\circ$ 或 $180^\circ$）时，机构进入奇异位形，雅可比条件数将急剧发散，电机力矩需求呈渐近线激增。通过此工作台可直观优化杆长组合，确保在行走摆动与站立相内远离死点。</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">电机中心间距 W_base:</span>
+              <span id="val-p-wbase" class="font-mono text-sky-400 font-semibold">70 mm</span>
+            </div>
+            <input id="param-wbase" type="range" min="40" max="130" step="2" value="70" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">电机安装高度 H_base:</span>
+              <span id="val-p-hbase" class="font-mono text-sky-400 font-semibold">180 mm</span>
+            </div>
+            <input id="param-hbase" type="range" min="110" max="280" step="5" value="180" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">电机前后偏置 X_base:</span>
+              <span id="val-p-xbase" class="font-mono text-sky-400 font-semibold">-40 mm</span>
+            </div>
+            <input id="param-xbase" type="range" min="-80" max="20" step="2" value="-40" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">曲柄长度 L_crank:</span>
+              <span id="val-p-lcrank" class="font-mono text-sky-400 font-semibold">45 mm</span>
+            </div>
+            <input id="param-lcrank" type="range" min="25" max="80" step="1" value="45" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">推拉连杆长度 L_rod:</span>
+              <span id="val-p-lrod" class="font-mono text-sky-400 font-semibold">165 mm</span>
+            </div>
+            <input id="param-lrod" type="range" min="100" max="260" step="2" value="165" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">足部球铰间距 W_foot:</span>
+              <span id="val-p-wfoot" class="font-mono text-sky-400 font-semibold">60 mm</span>
+            </div>
+            <input id="param-wfoot" type="range" min="30" max="110" step="2" value="60" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">足部球铰前后偏置 X_foot:</span>
+              <span id="val-p-xfoot" class="font-mono text-sky-400 font-semibold">-30 mm</span>
+            </div>
+            <input id="param-xfoot" type="range" min="-70" max="20" step="2" value="-30" class="w-full h-1.5 bg-slate-800 rounded-lg">
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300">足部球铰下沉 Z_foot:</span>
+              <span id="val-p-zfoot" class="font-mono text-sky-400 font-semibold">-20 mm</span>
+            </div>
+            <input id="param-zfoot" type="range" min="-50" max="10" step="2" value="-20" class="w-full h-1.5 bg-slate-800 rounded-lg">
           </div>
         </div>
-
-      </div>
+      </section>
 
     </div>
   </main>
 
-  <!-- 核心计算引擎与 3D / 曲线渲染逻辑 -->
+  <!-- 核心计算与 3D/图表渲染逻辑 -->
   <script>
-    // ==========================================
-    // 1. 机构数学与计算核心 (Math & Kinematics Engine)
-    // ==========================================
     class AnkleModel {
       constructor() {
-        // 几何尺寸参数 (单位: 米)
         this.params = {
-          w_base: 0.070,   // 电机轴横向间距
-          h_base: 0.180,   // 电机轴离 U 铰高度
-          x_base: -0.040,  // 电机轴后置偏置
-          l_crank: 0.045,  // 曲柄回转半径
-          l_rod: 0.165,    // 连杆长度
-          w_foot: 0.060,   // 足端球铰横向间距
-          x_foot: -0.030,  // 足端球铰前后偏置
-          z_foot: -0.020   // 足端球铰离 U 铰高度
+          w_base: 0.070,
+          h_base: 0.180,
+          x_base: -0.040,
+          l_crank: 0.045,
+          l_rod: 0.165,
+          w_foot: 0.060,
+          x_foot: -0.030,
+          z_foot: -0.020
         };
 
-        // 外部载荷参数
         this.load = {
-          Fz: 500.0,       // 垂直支反力 (N)
-          Fx: 0.0,         // 前后剪力 (N)
-          Fy: 0.0,         // 左右剪力 (N)
-          x_cop: 0.080,    // CoP 前后 (m)
-          y_cop: 0.0,      // CoP 左右 (m)
-          z_sole: -0.060   // 鞋底厚度偏置 (m)
+          Fz: 500.0,
+          Fx: 0.0,
+          Fy: 0.0,
+          x_cop: 0.080,
+          y_cop: 0.0,
+          z_sole: -0.060
         };
 
-        // 当前姿态状态
-        this.pitch = 0.0;  // 弧度
-        this.roll = 0.0;   // 弧度
-        this.theta1 = 0.0; // 弧度
-        this.theta2 = 0.0; // 弧度
+        this.pitch = 0.0;
+        this.roll = 0.0;
+        this.theta1 = 0.0;
+        this.theta2 = 0.0;
+
+        // 计算中立位平衡角度 (用于相对零位显示)
+        this.neutralTheta1 = 0.0;
+        this.neutralTheta2 = 0.0;
 
         this.updateDerivedGeometry();
       }
 
       updateDerivedGeometry() {
         const p = this.params;
-        // 电机底座中心点 A1 (左), A2 (右)
         this.A1 = [p.x_base, +p.w_base / 2.0, p.h_base];
         this.A2 = [p.x_base, -p.w_base / 2.0, p.h_base];
 
-        // 电机旋转轴 u (水平 Y 轴，左右对称)
         this.u1 = [0.0, 1.0, 0.0];
         this.u2 = [0.0, 1.0, 0.0];
 
-        // 0度参考向量 v (曲柄垂直向下 -Z)
+        // 零位定义: v 为垂直向下 (-Z)
         this.v1 = [0.0, 0.0, -1.0];
         this.v2 = [0.0, 0.0, -1.0];
 
-        // 正交向量 w = u x v = [-1, 0, 0] (曲柄向后摆动)
+        // 正向旋转方向: w = u x v = [-1, 0, 0] (向前摆动)
         this.w1 = [-1.0, 0.0, 0.0];
         this.w2 = [-1.0, 0.0, 0.0];
 
-        // 动平台球铰 C 在足部动系 {P} 下的局部坐标
         this.C1_P = [p.x_foot, +p.w_foot / 2.0, p.z_foot];
         this.C2_P = [p.x_foot, -p.w_foot / 2.0, p.z_foot];
+
+        // 求解中立姿态下的参考电机角度
+        const ik0 = this.solveIK(0.0, 0.0);
+        if (ik0.success) {
+          this.neutralTheta1 = ik0.theta1;
+          this.neutralTheta2 = ik0.theta2;
+        }
       }
 
-      // 旋转矩阵: R = Ry(pitch) * Rx(roll)
       getRotationMatrix(pitch, roll) {
         const ca = Math.cos(pitch), sa = Math.sin(pitch);
         const cb = Math.cos(roll), sb = Math.sin(roll);
-        // Ry * Rx
         return [
           [ca, sa * sb, sa * cb],
           [0.0, cb, -sb],
@@ -601,7 +622,6 @@
         ];
       }
 
-      // 矩阵乘向量
       matVec(R, v) {
         return [
           R[0][0]*v[0] + R[0][1]*v[1] + R[0][2]*v[2],
@@ -610,7 +630,6 @@
         ];
       }
 
-      // 动平台球铰在基系 {B} 下坐标
       getPlatformPoints(pitch, roll) {
         const R = this.getRotationMatrix(pitch, roll);
         return {
@@ -620,7 +639,6 @@
         };
       }
 
-      // 曲柄末端球铰 B1, B2
       getCrankTips(th1, th2) {
         const p = this.params;
         const B1 = [
@@ -636,7 +654,6 @@
         return { B1, B2 };
       }
 
-      // 逆运动学 (IK): 给定 pitch, roll -> 求解 theta1, theta2 (解析解)
       solveIK(pitch, roll) {
         const { C1, C2 } = this.getPlatformPoints(pitch, roll);
         const p = this.params;
@@ -669,7 +686,6 @@
           }
 
           if (thetas.length === 0) return { success: false, theta: 0 };
-          // 选取最靠近中立位 (绝对值较小) 的装配分支
           let best = thetas[0];
           for (let i = 1; i < thetas.length; i++) {
             if (Math.abs(thetas[i]) < Math.abs(best)) best = thetas[i];
@@ -687,7 +703,6 @@
         };
       }
 
-      // 正运动学 (FK): 给定 theta1, theta2 -> 牛顿拉夫逊迭代求 pitch, roll
       solveFK(th1, th2, guessPitch = 0, guessRoll = 0) {
         const { B1, B2 } = this.getCrankTips(th1, th2);
         const p = this.params;
@@ -704,7 +719,6 @@
             return { success: true, pitch: q[0], roll: q[1] };
           }
 
-          // 数值偏导雅可比
           const eps = 1e-6;
           const pts_p = this.getPlatformPoints(q[0] + eps, q[1]);
           const pts_r = this.getPlatformPoints(q[0], q[1] + eps);
@@ -727,12 +741,10 @@
         return { success: true, pitch: q[0], roll: q[1] };
       }
 
-      // 速度与力学雅可比计算
       getJacobianAndStatics(pitch, roll, th1, th2) {
         const { C1, C2 } = this.getPlatformPoints(pitch, roll);
         const { B1, B2 } = this.getCrankTips(th1, th2);
 
-        // 连杆单位方向向量 n (B -> C)
         const d1 = [C1[0]-B1[0], C1[1]-B1[1], C1[2]-B1[2]];
         const d2 = [C2[0]-B2[0], C2[1]-B2[1], C2[2]-B2[2]];
         const len1 = Math.hypot(d1[0], d1[1], d1[2]);
@@ -740,7 +752,6 @@
         const n1 = [d1[0]/len1, d1[1]/len1, d1[2]/len1];
         const n2 = [d2[0]/len2, d2[1]/len2, d2[2]/len2];
 
-        // 平台角速度变换矩阵 T_omega (3x2): omega = T_omega * [d_pitch, d_roll]^T
         const ca = Math.cos(pitch), sa = Math.sin(pitch);
         const T_omega = [
           [0.0, ca],
@@ -748,7 +759,6 @@
           [0.0, -sa]
         ];
 
-        // 叉乘辅助函数
         const cross = (a, b) => [
           a[1]*b[2] - a[2]*b[1],
           a[2]*b[0] - a[0]*b[2],
@@ -756,7 +766,6 @@
         ];
         const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 
-        // J_task 行向量: (C x n)^T * T_omega
         const C1_cross_n1 = cross(C1, n1);
         const C2_cross_n2 = cross(C2, n2);
 
@@ -771,7 +780,6 @@
           ]
         ];
 
-        // 曲柄末端线速度方向向量: v_crank_dir = u x (B - A)
         const r_crank1 = [B1[0]-this.A1[0], B1[1]-this.A1[1], B1[2]-this.A1[2]];
         const r_crank2 = [B2[0]-this.A2[0], B2[1]-this.A2[1], B2[2]-this.A2[2]];
         const v_crank1 = cross(this.u1, r_crank1);
@@ -780,29 +788,25 @@
         const h_act1 = dot(n1, v_crank1);
         const h_act2 = dot(n2, v_crank2);
 
-        // 传力角 mu (连杆与曲柄速度方向夹角)
         const v1_norm = Math.hypot(v_crank1[0], v_crank1[1], v_crank1[2]);
         const v2_norm = Math.hypot(v_crank2[0], v_crank2[1], v_crank2[2]);
         const mu1_rad = Math.acos(Math.min(1.0, Math.max(-1.0, Math.abs(h_act1) / (v1_norm + 1e-9))));
         const mu2_rad = Math.acos(Math.min(1.0, Math.max(-1.0, Math.abs(h_act2) / (v2_norm + 1e-9))));
 
-        // J_theta = diag(h_act)^{-1} * J_task
         if (Math.abs(h_act1) < 1e-6 || Math.abs(h_act2) < 1e-6) {
           return { singular: true, cond: 999.0 };
         }
 
         const J_theta = [
           [J_task[0][0] / h_act1, J_task[0][1] / h_act1],
-          [J_task[1][0] / h_act2, J_task[1][1] / h_act2]
+          [J_task[1][0] / h_act2, J_task[1][0] / h_act2]
         ];
 
-        // J_theta 的逆与行列式
         const detJ = J_theta[0][0]*J_theta[1][1] - J_theta[0][1]*J_theta[1][0];
         if (Math.abs(detJ) < 1e-6) {
           return { singular: true, cond: 999.0 };
         }
 
-        // 条件数近似 (Frobenius / SVD)
         const a11 = J_theta[0][0], a12 = J_theta[0][1], a21 = J_theta[1][0], a22 = J_theta[1][1];
         const s_sum = a11*a11 + a12*a12 + a21*a21 + a22*a22;
         const s_disc = Math.sqrt(Math.max(0, (a11*a11 + a12*a12 - a21*a21 - a22*a22)**2 + 4*(a11*a21 + a12*a22)**2));
@@ -810,18 +814,13 @@
         const sig2 = Math.sqrt(0.5 * Math.max(0, s_sum - s_disc));
         const cond = sig2 > 1e-6 ? (sig1 / sig2) : 999.0;
 
-        // 静力平衡与外力矩计算:
-        // M_total = r_cop x F_grf
         const r_cop = [this.load.x_cop, this.load.y_cop, this.load.z_sole];
         const F_grf = [this.load.Fx, this.load.Fy, this.load.Fz];
         const M_total = cross(r_cop, F_grf);
 
-        // 任务空间等效力矩: tau_qp = T_omega^T * M_total
         const tau_pitch = T_omega[0][0]*M_total[0] + T_omega[1][0]*M_total[1] + T_omega[2][0]*M_total[2];
         const tau_roll  = T_omega[0][1]*M_total[0] + T_omega[1][1]*M_total[1] + T_omega[2][1]*M_total[2];
 
-        // 电机力矩: tau_motor = J_theta^{-T} * tau_qp
-        // J_inv_T:
         const J_inv_T = [
           [ J_theta[1][1] / detJ, -J_theta[1][0] / detJ ],
           [-J_theta[0][1] / detJ,  J_theta[0][0] / detJ ]
@@ -830,7 +829,6 @@
         const tau_m1 = J_inv_T[0][0]*tau_pitch + J_inv_T[0][1]*tau_roll;
         const tau_m2 = J_inv_T[1][0]*tau_pitch + J_inv_T[1][1]*tau_roll;
 
-        // 连杆轴向力: F_rod_i = tau_m_i / h_act_i
         const f_rod1 = tau_m1 / h_act1;
         const f_rod2 = tau_m2 / h_act2;
 
@@ -855,20 +853,20 @@
     }
 
     const model = new AnkleModel();
+    let displayModeRelative = false; // false = 绝对角度, true = 相对中立角度
 
     // ==========================================
-    // 2. 3D 球棍模型 Canvas 渲染器 (Pure Vanilla JS 3D Engine)
+    // 3D 画布渲染器 (带 3D 电机角度刻度盘与指针)
     // ==========================================
     class Canvas3DViewer {
       constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
 
-        // 摄像机控制
         this.cam = {
-          yaw: -0.75,       // 水平旋转
-          pitch: 0.35,      // 俯仰观察角
-          dist: 0.58,       // 视距 (米)
+          yaw: -0.75,
+          pitch: 0.35,
+          dist: 0.58,
           panX: 0.0,
           panY: -0.06
         };
@@ -906,10 +904,10 @@
           const dy = e.clientY - this.lastMouse.y;
           this.lastMouse = { x: e.clientX, y: e.clientY };
 
-          if (this.dragButton === 0 && !e.shiftKey) { // 旋转
+          if (this.dragButton === 0 && !e.shiftKey) {
             this.cam.yaw += dx * 0.008;
             this.cam.pitch = Math.max(-1.4, Math.min(1.4, this.cam.pitch + dy * 0.008));
-          } else { // 平移
+          } else {
             this.cam.panX += dx * 0.0008 * (this.cam.dist / 0.5);
             this.cam.panY -= dy * 0.0008 * (this.cam.dist / 0.5);
           }
@@ -920,34 +918,28 @@
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
         this.canvas.addEventListener('wheel', (e) => {
+          // 仅当用户在画布上滚动且阻止默认时缩放，避免页面无法上下查看
           e.preventDefault();
           this.cam.dist = Math.max(0.2, Math.min(1.8, this.cam.dist + e.deltaY * 0.0006));
           requestRender();
         }, { passive: false });
       }
 
-      // 3D 世界坐标投影到 2D Canvas 屏幕坐标
       project(x, y, z) {
-        // 先平移至观察中心
-        let px = x;
-        let py = y;
-        let pz = z;
+        let px = x, py = y, pz = z;
 
-        // 绕 Z 轴旋转 (Yaw)
         const cy = Math.cos(this.cam.yaw), sy = Math.sin(this.cam.yaw);
         let x1 = px * cy - py * sy;
         let y1 = px * sy + py * cy;
         let z1 = pz;
 
-        // 绕侧轴旋转 (Pitch)
         const cp = Math.cos(this.cam.pitch), sp = Math.sin(this.cam.pitch);
         let x2 = x1;
         let y2 = y1 * cp - z1 * sp;
         let z2 = y1 * sp + z1 * cp;
 
-        // 摄像机视点变换
         const camZ = y2 + this.cam.dist;
-        const fov = 420; // 焦距
+        const fov = 420;
 
         const depth = camZ;
         const scale = fov / Math.max(0.08, camZ);
@@ -961,13 +953,11 @@
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
 
-        // 1. 绘制背景网格与阴影参考面 (Ground Plane at z = -0.06m)
         this.renderGroundGrid(model.load.z_sole);
 
-        // 收集所有需要按深度排序渲染的 3D 图元
         const primitives = [];
 
-        // ① 基座中心小腿轴骨架 (Shank Strut)
+        // 骨架
         primitives.push({
           type: 'cylinder',
           p1: [0, 0, 0],
@@ -977,7 +967,7 @@
           depth: 0
         });
 
-        // ② 电机底座安装座连梁 (A1 - A2 支撑横梁)
+        // 电机底座横梁
         primitives.push({
           type: 'cylinder',
           p1: model.A1,
@@ -995,32 +985,32 @@
           depth: 0
         });
 
-        // ③ 电机外壳主体 (圆柱体/球)
+        // 电机壳体与角度刻度盘
         primitives.push({
-          type: 'sphere',
-          p: model.A1,
-          radius: 0.012,
-          color: '#0284c7', // Sky-600
-          label: 'A1(电机1)',
+          type: 'motor_dial',
+          center: model.A1,
+          theta: model.theta1,
+          label: 'M1',
+          side: 'left',
           depth: 0
         });
         primitives.push({
-          type: 'sphere',
-          p: model.A2,
-          radius: 0.012,
-          color: '#0284c7',
-          label: 'A2(电机2)',
+          type: 'motor_dial',
+          center: model.A2,
+          theta: model.theta2,
+          label: 'M2',
+          side: 'right',
           depth: 0
         });
 
-        // ④ 曲柄 (Crank A -> B)
         const { B1, B2 } = statics;
+        // 曲柄
         primitives.push({
           type: 'cylinder',
           p1: model.A1,
           p2: B1,
           radius: 0.0045,
-          color: '#38bdf8', // 亮天蓝
+          color: '#38bdf8',
           depth: 0
         });
         primitives.push({
@@ -1032,12 +1022,12 @@
           depth: 0
         });
 
-        // ⑤ 曲柄端球铰 (B1, B2)
+        // 曲柄球铰 B1, B2
         primitives.push({
           type: 'sphere',
           p: B1,
           radius: 0.008,
-          color: '#22d3ee', // Cyan
+          color: '#22d3ee',
           label: 'B1',
           depth: 0
         });
@@ -1050,12 +1040,11 @@
           depth: 0
         });
 
-        // ⑥ 连杆/推拉杆 (Pushrod B -> C)
         const { C1, C2 } = statics;
-        // 连杆颜色根据推拉受力情况变色 (受拉偏蓝，受压偏橙)
         const rod1Color = statics.f_rod1 > 0 ? '#38bdf8' : '#fb923c';
         const rod2Color = statics.f_rod2 > 0 ? '#38bdf8' : '#fb923c';
 
+        // 推拉杆
         primitives.push({
           type: 'cylinder',
           p1: B1,
@@ -1073,12 +1062,12 @@
           depth: 0
         });
 
-        // ⑦ 足端球铰 (C1, C2)
+        // 足端球铰 C1, C2
         primitives.push({
           type: 'sphere',
           p: C1,
           radius: 0.008,
-          color: '#e879f9', // Fuchsia
+          color: '#e879f9',
           label: 'C1',
           depth: 0
         });
@@ -1091,7 +1080,7 @@
           depth: 0
         });
 
-        // ⑧ 动平台足底平板 (Foot Platform Mesh)
+        // 足底平板
         primitives.push({
           type: 'foot_plate',
           model: model,
@@ -1100,7 +1089,7 @@
           depth: 0
         });
 
-        // ⑨ 中心 1-U 虎克铰十字轴与中心球 (Universal Joint O)
+        // 1-U 虎克铰
         primitives.push({
           type: 'u_joint',
           center: [0, 0, 0],
@@ -1109,10 +1098,9 @@
           depth: 0
         });
 
-        // ⑩ 地面支反力向量 (GRF 箭头)
+        // GRF 矢量箭头
         if (Math.abs(model.load.Fz) > 10 || Math.abs(model.load.Fx) > 5) {
           const cop_pos = [model.load.x_cop, model.load.y_cop, model.load.z_sole];
-          // 缩放箭头长度 (500N 对应 0.08m)
           const scale_f = 0.08 / 500.0;
           const grf_end = [
             cop_pos[0] + model.load.Fx * scale_f,
@@ -1129,7 +1117,7 @@
           });
         }
 
-        // 计算每个图元的平均深度进行 Painter's Algorithm 排序 (从远到近)
+        // 计算深度并排序
         primitives.forEach(prim => {
           if (prim.type === 'sphere') {
             prim.depth = this.project(prim.p[0], prim.p[1], prim.p[2]).depth;
@@ -1137,6 +1125,8 @@
             const d1 = this.project(prim.p1[0], prim.p1[1], prim.p1[2]).depth;
             const d2 = this.project(prim.p2[0], prim.p2[1], prim.p2[2]).depth;
             prim.depth = (d1 + d2) / 2.0;
+          } else if (prim.type === 'motor_dial') {
+            prim.depth = this.project(prim.center[0], prim.center[1], prim.center[2]).depth;
           } else if (prim.type === 'u_joint') {
             prim.depth = this.project(0, 0, 0).depth;
           } else if (prim.type === 'foot_plate') {
@@ -1148,16 +1138,15 @@
 
         primitives.sort((a, b) => b.depth - a.depth);
 
-        // 依次绘制已排序图元
         primitives.forEach(prim => {
           if (prim.type === 'cylinder') this.drawCylinder(prim);
           else if (prim.type === 'sphere') this.drawSphere(prim);
+          else if (prim.type === 'motor_dial') this.drawMotorDial(prim);
           else if (prim.type === 'u_joint') this.drawUJoint(prim);
           else if (prim.type === 'foot_plate') this.drawFootPlate(prim);
           else if (prim.type === 'arrow') this.drawArrow(prim);
         });
 
-        // 绘制三维坐标轴基准
         this.drawCoordinateAxes();
       }
 
@@ -1195,7 +1184,6 @@
         ctx.beginPath();
         ctx.arc(proj.x, proj.y, r, 0, Math.PI * 2);
 
-        // 3D 渐变高光球体效果
         const grad = ctx.createRadialGradient(
           proj.x - r * 0.35, proj.y - r * 0.35, r * 0.1,
           proj.x, proj.y, r
@@ -1236,16 +1224,51 @@
         ctx.strokeStyle = prim.color;
         ctx.lineCap = 'round';
 
-        // 阴影与高光双层连杆效果
         ctx.beginPath();
         ctx.moveTo(proj1.x, proj1.y);
         ctx.lineTo(proj2.x, proj2.y);
         ctx.stroke();
 
-        // 内部高光线
         ctx.lineWidth = Math.max(1, w * 0.35);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // 绘制电机端 3D 角度刻度表盘与零位/正向指示
+      drawMotorDial(prim) {
+        const ctx = this.ctx;
+        const center = this.project(prim.center[0], prim.center[1], prim.center[2]);
+        const radius = Math.max(14, 0.024 * center.scale);
+
+        ctx.save();
+        // 绘制电机外壳圆柱端面
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 绘制 3D 绝对零位参考线 (向下垂直 -Z 方向)
+        const pZero = this.project(prim.center[0], prim.center[1], prim.center[2] - 0.026);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(center.x, center.y);
+        ctx.lineTo(pZero.x, pZero.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 绘制转角数值悬浮指示条
+        const thDeg = prim.theta * 180 / Math.PI;
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px monospace';
+        const textY = prim.side === 'left' ? center.y - radius - 5 : center.y + radius + 14;
+        ctx.fillText(`${prim.label}: ${thDeg >= 0 ? '+' : ''}${thDeg.toFixed(1)}°`, center.x - 22, textY);
 
         ctx.restore();
       }
@@ -1254,20 +1277,16 @@
         const ctx = this.ctx;
         const center = this.project(0, 0, 0);
 
-        // 虎克铰十字轴尺寸
         const axisLen = 0.018;
-        // Pitch 轴 (沿横向 Y)
         const py1 = this.project(0, -axisLen, 0);
         const py2 = this.project(0, axisLen, 0);
-        // Roll 轴 (经动系旋转后的 X 轴)
         const ca = Math.cos(prim.pitch), sa = Math.sin(prim.pitch);
         const rx1 = this.project(-axisLen * ca, 0, axisLen * sa);
         const rx2 = this.project(axisLen * ca, 0, -axisLen * sa);
 
         ctx.save();
-        // 绘制十字轴两根销轴
         ctx.lineWidth = 4;
-        ctx.strokeStyle = '#f59e0b'; // Amber
+        ctx.strokeStyle = '#f59e0b';
         ctx.beginPath();
         ctx.moveTo(py1.x, py1.y);
         ctx.lineTo(py2.x, py2.y);
@@ -1279,7 +1298,6 @@
         ctx.lineTo(rx2.x, rx2.y);
         ctx.stroke();
 
-        // 中心虎克铰球头
         const r = Math.max(4, 0.010 * center.scale);
         ctx.beginPath();
         ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
@@ -1300,25 +1318,21 @@
         const m = prim.model;
         const R = m.getRotationMatrix(m.pitch, m.roll);
 
-        // 足部平板外形特征点 (在局部坐标系 {P} 下)
-        // [X, Y, Z]
         const localFoot = [
-          [-0.07, -0.035, m.load.z_sole], // 后跟外
-          [-0.07, +0.035, m.load.z_sole], // 后跟内
-          [+0.04, +0.038, m.load.z_sole], // 内足弓/前掌
-          [+0.13, +0.025, m.load.z_sole], // 脚尖内 (大拇指)
-          [+0.13, -0.025, m.load.z_sole], // 脚尖外
-          [+0.05, -0.035, m.load.z_sole]  // 外侧掌
+          [-0.07, -0.035, m.load.z_sole],
+          [-0.07, +0.035, m.load.z_sole],
+          [+0.04, +0.038, m.load.z_sole],
+          [+0.13, +0.025, m.load.z_sole],
+          [+0.13, -0.025, m.load.z_sole],
+          [+0.05, -0.035, m.load.z_sole]
         ];
 
-        // 旋转投影
         const poly = localFoot.map(pt => {
           const world = m.matVec(R, pt);
           return this.project(world[0], world[1], world[2]);
         });
 
         ctx.save();
-        // 绘制足底平板多边形
         ctx.beginPath();
         ctx.moveTo(poly[0].x, poly[0].y);
         for (let i = 1; i < poly.length; i++) {
@@ -1332,7 +1346,6 @@
         ctx.strokeStyle = '#64748b';
         ctx.stroke();
 
-        // 绘制从 U-joint 中心到 C1, C2 的刚性连接支架骨架
         const center = this.project(0, 0, 0);
         const c1 = this.project(prim.C1[0], prim.C1[1], prim.C1[2]);
         const c2 = this.project(prim.C2[0], prim.C2[1], prim.C2[2]);
@@ -1347,7 +1360,6 @@
         ctx.lineTo(c1.x, c1.y);
         ctx.stroke();
 
-        // 绘制 CoP (压力中心) 标志
         const copWorld = [m.load.x_cop, m.load.y_cop, m.load.z_sole];
         const copProj = this.project(copWorld[0], copWorld[1], copWorld[2]);
 
@@ -1381,13 +1393,11 @@
         ctx.fillStyle = prim.color;
         ctx.lineWidth = 3;
 
-        // 箭身
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
 
-        // 箭头
         const headlen = 10;
         ctx.beginPath();
         ctx.moveTo(p2.x, p2.y);
@@ -1428,11 +1438,8 @@
         };
 
         ctx.save();
-        // X轴 (红色 - 前方)
         drawAxis(0, 0, '#ef4444', 'X(前)');
-        // Y轴 (绿色 - 左方)
         drawAxis(Math.PI / 2, 0, '#22c55e', 'Y(左)');
-        // Z轴 (蓝色 - 向上)
         ctx.beginPath();
         ctx.moveTo(origin.x, origin.y);
         ctx.lineTo(origin.x, origin.y - axisLen);
@@ -1450,7 +1457,7 @@
     const viewer = new Canvas3DViewer('canvas-3d');
 
     // ==========================================
-    // 3. 2D 分析曲线渲染引擎 (Pure Vanilla Canvas Charts)
+    // 2D 曲线渲染引擎
     // ==========================================
     class AnalyticalPlot {
       constructor(canvasId, title, yUnit, opt = {}) {
@@ -1458,7 +1465,7 @@
         this.ctx = this.canvas.getContext('2d');
         this.title = title;
         this.yUnit = yUnit;
-        this.opt = opt; // zone: { min, max, safeColor }
+        this.opt = opt;
         this.resize();
         window.addEventListener('resize', () => this.resize());
       }
@@ -1485,7 +1492,6 @@
         const plotW = this.width - padLeft - padRight;
         const plotH = this.height - padTop - padBottom;
 
-        // 计算 X、Y 范围
         let xMin = -30, xMax = 25;
         let yMin = Infinity, yMax = -Infinity;
 
@@ -1502,7 +1508,6 @@
           yMin = -10; yMax = 10;
         }
 
-        // 预留上下 10% 边距
         const yRange = yMax - yMin;
         yMin -= yRange * 0.1;
         yMax += yRange * 0.1;
@@ -1510,7 +1515,6 @@
         const toScreenX = (x) => padLeft + ((x - xMin) / (xMax - xMin)) * plotW;
         const toScreenY = (y) => padTop + (1.0 - (y - yMin) / (yMax - yMin)) * plotH;
 
-        // 1. 安全区域背景填充 (如传力角图)
         if (this.opt.safeZone) {
           const syTop = Math.max(padTop, toScreenY(this.opt.safeZone[1]));
           const syBot = Math.min(padTop + plotH, toScreenY(this.opt.safeZone[0]));
@@ -1518,12 +1522,10 @@
           ctx.fillRect(padLeft, syTop, plotW, syBot - syTop);
         }
 
-        // 2. 坐标网格与刻度
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 1;
         ctx.strokeRect(padLeft, padTop, plotW, plotH);
 
-        // Y 轴水平辅助线
         const yTicks = 4;
         ctx.fillStyle = '#64748b';
         ctx.font = '10px monospace';
@@ -1540,7 +1542,6 @@
           ctx.fillText(yVal.toFixed(1), padLeft - 4, sy + 3);
         }
 
-        // X = 0 参考竖线
         if (xMin < 0 && xMax > 0) {
           const sx0 = toScreenX(0);
           ctx.strokeStyle = '#334155';
@@ -1552,7 +1553,6 @@
           ctx.setLineDash([]);
         }
 
-        // X 轴刻度
         ctx.textAlign = 'center';
         const xTicks = [-30, -15, 0, 15, 25];
         xTicks.forEach(xt => {
@@ -1560,7 +1560,6 @@
           ctx.fillText(xt + '°', sx, padTop + plotH + 14);
         });
 
-        // 3. 绘制折线曲线
         seriesList.forEach(s => {
           ctx.strokeStyle = s.color;
           ctx.lineWidth = 2;
@@ -1585,11 +1584,9 @@
           ctx.stroke();
         });
 
-        // 4. 绘制当前工况点 (高亮圆点)
         if (currentPoint && currentPoint.x !== null) {
           const sx = toScreenX(currentPoint.x);
 
-          // 竖直虚线指示当前 Pitch
           ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
           ctx.setLineDash([2, 2]);
           ctx.beginPath();
@@ -1628,7 +1625,6 @@
     const plotTransmission = new AnalyticalPlot('chart-transmission', 'μ vs Pitch', 'deg', { safeZone: [45, 135] });
     const plotDexterity = new AnalyticalPlot('chart-dexterity', 'κ vs Pitch', '');
 
-    // 全局曲线数据缓存
     let cachedCurveData = null;
 
     function computeAnalyticalCurves() {
@@ -1657,8 +1653,12 @@
 
         const stat = model.getJacobianAndStatics(pRad, roll, ik.theta1, ik.theta2);
 
-        dataTh1.push({ x: pDeg, y: ik.theta1 * 180 / Math.PI });
-        dataTh2.push({ x: pDeg, y: ik.theta2 * 180 / Math.PI });
+        // 如果用户选择了相对角度模式，曲线自动换算为相对中立位的增量角
+        const plotTh1 = displayModeRelative ? (ik.theta1 - model.neutralTheta1) : ik.theta1;
+        const plotTh2 = displayModeRelative ? (ik.theta2 - model.neutralTheta2) : ik.theta2;
+
+        dataTh1.push({ x: pDeg, y: plotTh1 * 180 / Math.PI });
+        dataTh2.push({ x: pDeg, y: plotTh2 * 180 / Math.PI });
 
         if (stat.singular) {
           dataTau1.push({ x: pDeg, y: null });
@@ -1687,18 +1687,18 @@
       if (!cachedCurveData) computeAnalyticalCurves();
 
       const currPitchDeg = model.pitch * 180 / Math.PI;
+      const currTh1 = displayModeRelative ? (model.theta1 - model.neutralTheta1) : model.theta1;
+      const currTh2 = displayModeRelative ? (model.theta2 - model.neutralTheta2) : model.theta2;
 
-      // 1. 运动学图
       plotKinematics.render([
         { color: '#38bdf8', data: cachedCurveData.dataTh1 },
         { color: '#fbbf24', data: cachedCurveData.dataTh2 }
       ], {
         x: currPitchDeg,
-        y1: model.theta1 * 180 / Math.PI,
-        y2: model.theta2 * 180 / Math.PI
+        y1: currTh1 * 180 / Math.PI,
+        y2: currTh2 * 180 / Math.PI
       });
 
-      // 2. 静力学图
       plotStatics.render([
         { color: '#38bdf8', data: cachedCurveData.dataTau1 },
         { color: '#fbbf24', data: cachedCurveData.dataTau2 }
@@ -1708,7 +1708,6 @@
         y2: currentStatics.tau_m2
       });
 
-      // 3. 传力角图
       plotTransmission.render([
         { color: '#38bdf8', data: cachedCurveData.dataMu1 },
         { color: '#fbbf24', data: cachedCurveData.dataMu2 }
@@ -1718,7 +1717,6 @@
         y2: currentStatics.mu2_deg
       });
 
-      // 4. 条件数图
       plotDexterity.render([
         { color: '#c084fc', data: cachedCurveData.dataCond }
       ], {
@@ -1727,14 +1725,10 @@
         y2: null
       });
 
-      // 更新标签
       document.getElementById('curve-curr-roll').textContent = (model.roll * 180 / Math.PI).toFixed(1) + '°';
       document.getElementById('curve-curr-fz').textContent = Math.round(model.load.Fz);
     }
 
-    // ==========================================
-    // 4. 交互与 UI 控制流逻辑 (Interactive Controller)
-    // ==========================================
     let renderScheduled = false;
     function requestRender() {
       if (renderScheduled) return;
@@ -1746,7 +1740,6 @@
     }
 
     function updateFullPipeline(recomputeCurves = false) {
-      // 1. 执行正逆解求解
       let ik = model.solveIK(model.pitch, model.roll);
       let isSingular = !ik.success;
 
@@ -1755,31 +1748,48 @@
         model.theta2 = ik.theta2;
       }
 
-      // 2. 静力学与雅可比计算
       let statics = model.getJacobianAndStatics(model.pitch, model.roll, model.theta1, model.theta2);
 
-      // 3. 更新界面文字指标
       updateMetricsUI(statics, isSingular);
-
-      // 4. 3D 球棍模型渲染
       viewer.render(model, statics);
 
-      // 5. 理性分析曲线渲染
       if (recomputeCurves || !cachedCurveData) {
         computeAnalyticalCurves();
       }
       renderCurves(statics);
-
-      // 6. 2D 拖动手柄位置同步
       updatePadDot();
     }
 
     function updateMetricsUI(stat, isSingular) {
-      const th1Deg = (model.theta1 * 180 / Math.PI).toFixed(1);
-      const th2Deg = (model.theta2 * 180 / Math.PI).toFixed(1);
+      const th1DegAbs = (model.theta1 * 180 / Math.PI).toFixed(1);
+      const th2DegAbs = (model.theta2 * 180 / Math.PI).toFixed(1);
+      const dth1Deg = ((model.theta1 - model.neutralTheta1) * 180 / Math.PI).toFixed(1);
+      const dth2Deg = ((model.theta2 - model.neutralTheta2) * 180 / Math.PI).toFixed(1);
 
-      document.getElementById('metric-th1').textContent = (model.theta1 >= 0 ? '+' : '') + th1Deg + '°';
-      document.getElementById('metric-th2').textContent = (model.theta2 >= 0 ? '+' : '') + th2Deg + '°';
+      // 顶部大卡片与底栏指示
+      const displayTh1 = displayModeRelative ? (dth1Deg >= 0 ? '+' : '') + dth1Deg + '°' : (model.theta1 >= 0 ? '+' : '') + th1DegAbs + '°';
+      const displayTh2 = displayModeRelative ? (dth2Deg >= 0 ? '+' : '') + dth2Deg + '°' : (model.theta2 >= 0 ? '+' : '') + th2DegAbs + '°';
+
+      document.getElementById('big-m1-val').textContent = displayTh1;
+      document.getElementById('big-m2-val').textContent = displayTh2;
+      document.getElementById('sub-m1-val').textContent = displayModeRelative ? `绝对角: ${th1DegAbs}°` : `相对中立: ${(dth1Deg >= 0 ? '+' : '')}${dth1Deg}°`;
+      document.getElementById('sub-m2-val').textContent = displayModeRelative ? `绝对角: ${th2DegAbs}°` : `相对中立: ${(dth2Deg >= 0 ? '+' : '')}${dth2Deg}°`;
+
+      document.getElementById('metric-th1-disp').textContent = displayTh1;
+      document.getElementById('metric-th2-disp').textContent = displayTh2;
+      document.getElementById('metric-dth1').textContent = (dth1Deg >= 0 ? '+' : '') + dth1Deg + '°';
+      document.getElementById('metric-dth2').textContent = (dth2Deg >= 0 ? '+' : '') + dth2Deg + '°';
+
+      // 电机进度条宽度 (-45° ~ +90° 映射到 0% ~ 100%)
+      const pctM1 = Math.max(0, Math.min(100, ((parseFloat(th1DegAbs) + 45) / 135) * 100));
+      const pctM2 = Math.max(0, Math.min(100, ((parseFloat(th2DegAbs) + 45) / 135) * 100));
+      document.getElementById('bar-m1').style.width = pctM1 + '%';
+      document.getElementById('bar-m2').style.width = pctM2 + '%';
+
+      // 姿态文本
+      const pDeg = (model.pitch * 180 / Math.PI).toFixed(1);
+      const rDeg = (model.roll * 180 / Math.PI).toFixed(1);
+      document.getElementById('metric-pose-disp').textContent = `P: ${pDeg}° | R: ${rDeg}°`;
 
       if (stat && !stat.singular) {
         document.getElementById('metric-tau1').textContent = stat.tau_m1.toFixed(1) + ' Nm';
@@ -1799,7 +1809,11 @@
         document.getElementById('rod-length-val').textContent =
           `L1: ${(stat.len1*1000).toFixed(1)}mm | L2: ${(stat.len2*1000).toFixed(1)}mm`;
 
-        // 状态胶囊指示
+        if (stat.J_theta) {
+          const ratio = Math.abs(stat.J_theta[0][0]).toFixed(2);
+          document.getElementById('disp-trans-ratio').textContent = `dθ/dPitch ≈ ${ratio}`;
+        }
+
         const ind = document.getElementById('singularity-indicator');
         if (stat.cond > 8.0 || stat.mu1_deg < 40 || stat.mu2_deg < 40) {
           ind.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium shadow-md';
@@ -1817,7 +1831,29 @@
       document.getElementById('metric-u-fz').textContent = Math.round(model.load.Fz) + ' N';
     }
 
-    // 绑定姿态滑条事件
+    // 角度显示基准切换事件
+    const btnAngleAbs = document.getElementById('btn-angle-mode-abs');
+    const btnAngleRel = document.getElementById('btn-angle-mode-rel');
+
+    btnAngleAbs.addEventListener('click', () => {
+      displayModeRelative = false;
+      btnAngleAbs.className = 'px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-medium transition';
+      btnAngleRel.className = 'px-2 py-1 rounded text-slate-400 hover:text-white transition';
+      document.getElementById('label-m1-mode-tag').textContent = '绝对角 θ1';
+      document.getElementById('label-m2-mode-tag').textContent = '绝对角 θ2';
+      updateFullPipeline(true);
+    });
+
+    btnAngleRel.addEventListener('click', () => {
+      displayModeRelative = true;
+      btnAngleRel.className = 'px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-medium transition';
+      btnAngleAbs.className = 'px-2 py-1 rounded text-slate-400 hover:text-white transition';
+      document.getElementById('label-m1-mode-tag').textContent = '中立相对角 Δθ1';
+      document.getElementById('label-m2-mode-tag').textContent = '中立相对角 Δθ2';
+      updateFullPipeline(true);
+    });
+
+    // 姿态滑条绑定
     const sliderPitch = document.getElementById('slider-pitch');
     const sliderRoll = document.getElementById('slider-roll');
     const labelPitch = document.getElementById('label-pitch-val');
@@ -1832,10 +1868,66 @@
     sliderRoll.addEventListener('input', (e) => {
       model.roll = parseFloat(e.target.value) * Math.PI / 180.0;
       labelRoll.textContent = parseFloat(e.target.value).toFixed(1) + '°';
-      updateFullPipeline(true); // Roll 改变时需重新生成整个扫描曲线
+      updateFullPipeline(true);
     });
 
-    // 绑定支反力载荷滑条事件
+    // 模式切换: IK vs FK
+    const btnModeIK = document.getElementById('mode-ik');
+    const btnModeFK = document.getElementById('mode-fk');
+    const controlsIK = document.getElementById('controls-ik');
+    const controlsFK = document.getElementById('controls-fk');
+    const sliderTh1 = document.getElementById('slider-th1');
+    const sliderTh2 = document.getElementById('slider-th2');
+
+    btnModeIK.addEventListener('click', () => {
+      btnModeIK.className = 'px-2.5 py-1 rounded text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium';
+      btnModeFK.className = 'px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200';
+      controlsIK.classList.remove('hidden');
+      controlsFK.classList.add('hidden');
+    });
+
+    btnModeFK.addEventListener('click', () => {
+      btnModeFK.className = 'px-2.5 py-1 rounded text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium';
+      btnModeIK.className = 'px-2.5 py-1 rounded text-xs text-slate-400 hover:text-slate-200';
+      controlsFK.classList.remove('hidden');
+      controlsIK.classList.add('hidden');
+      sliderTh1.value = (model.theta1 * 180 / Math.PI).toFixed(1);
+      sliderTh2.value = (model.theta2 * 180 / Math.PI).toFixed(1);
+      document.getElementById('label-th1-val').textContent = sliderTh1.value + '°';
+      document.getElementById('label-th2-val').textContent = sliderTh2.value + '°';
+    });
+
+    sliderTh1.addEventListener('input', (e) => {
+      const th1 = parseFloat(e.target.value) * Math.PI / 180.0;
+      document.getElementById('label-th1-val').textContent = parseFloat(e.target.value).toFixed(1) + '°';
+      const fk = model.solveFK(th1, model.theta2, model.pitch, model.roll);
+      if (fk.success) {
+        model.pitch = fk.pitch;
+        model.roll = fk.roll;
+        sliderPitch.value = (fk.pitch * 180 / Math.PI).toFixed(1);
+        sliderRoll.value = (fk.roll * 180 / Math.PI).toFixed(1);
+        labelPitch.textContent = sliderPitch.value + '°';
+        labelRoll.textContent = sliderRoll.value + '°';
+        updateFullPipeline(true);
+      }
+    });
+
+    sliderTh2.addEventListener('input', (e) => {
+      const th2 = parseFloat(e.target.value) * Math.PI / 180.0;
+      document.getElementById('label-th2-val').textContent = parseFloat(e.target.value).toFixed(1) + '°';
+      const fk = model.solveFK(model.theta1, th2, model.pitch, model.roll);
+      if (fk.success) {
+        model.pitch = fk.pitch;
+        model.roll = fk.roll;
+        sliderPitch.value = (fk.pitch * 180 / Math.PI).toFixed(1);
+        sliderRoll.value = (fk.roll * 180 / Math.PI).toFixed(1);
+        labelPitch.textContent = sliderPitch.value + '°';
+        labelRoll.textContent = sliderRoll.value + '°';
+        updateFullPipeline(true);
+      }
+    });
+
+    // 支反力滑条
     const sliderFz = document.getElementById('slider-fz');
     const sliderFx = document.getElementById('slider-fx');
     const sliderCopX = document.getElementById('slider-copx');
@@ -1865,7 +1957,7 @@
       updateFullPipeline(true);
     });
 
-    // 2D 拖动触控面板 (Pad 2D)
+    // 2D 触控板
     const pad2d = document.getElementById('pad-2d');
     const padDot = document.getElementById('pad-dot');
     let isDraggingPad = false;
@@ -1875,11 +1967,8 @@
       const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
       const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
 
-      // x: Roll (-20° ~ +20°)
       const normX = x / rect.width;
       const rollDeg = (normX - 0.5) * 40.0;
-
-      // y: Pitch (+25° ~ -30°)
       const normY = y / rect.height;
       const pitchDeg = 25.0 - normY * 55.0;
 
@@ -1914,7 +2003,7 @@
       padDot.style.top = `${Math.max(5, Math.min(95, normY * 100))}%`;
     }
 
-    // 参数滑动条绑定
+    // 参数绑定
     const paramInputs = [
       { id: 'param-wbase', key: 'w_base', labelId: 'val-p-wbase', scale: 0.001, unit: ' mm' },
       { id: 'param-hbase', key: 'h_base', labelId: 'val-p-hbase', scale: 0.001, unit: ' mm' },
@@ -1935,26 +2024,6 @@
         model.updateDerivedGeometry();
         updateFullPipeline(true);
       });
-    });
-
-    // 选项卡切换
-    const tabBtnMotion = document.getElementById('tab-btn-motion');
-    const tabBtnParams = document.getElementById('tab-btn-params');
-    const tabContentMotion = document.getElementById('tab-content-motion');
-    const tabContentParams = document.getElementById('tab-content-params');
-
-    tabBtnMotion.addEventListener('click', () => {
-      tabBtnMotion.className = 'pb-2.5 text-xs font-semibold text-sky-400 border-b-2 border-sky-400 transition flex items-center gap-1.5';
-      tabBtnParams.className = 'pb-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition flex items-center gap-1.5';
-      tabContentMotion.classList.remove('hidden');
-      tabContentParams.classList.add('hidden');
-    });
-
-    tabBtnParams.addEventListener('click', () => {
-      tabBtnParams.className = 'pb-2.5 text-xs font-semibold text-sky-400 border-b-2 border-sky-400 transition flex items-center gap-1.5';
-      tabBtnMotion.className = 'pb-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition flex items-center gap-1.5';
-      tabContentParams.classList.remove('hidden');
-      tabContentMotion.classList.add('hidden');
     });
 
     // 视点切换
@@ -1986,7 +2055,6 @@
       updateFullPipeline(true);
     });
 
-    // 预设配置
     function applyPreset(p) {
       Object.assign(model.params, p);
       model.updateDerivedGeometry();
@@ -1998,20 +2066,11 @@
       updateFullPipeline(true);
     }
 
-    document.getElementById('preset-default').addEventListener('click', () => {
+    document.getElementById('btn-reset-params').addEventListener('click', () => {
       applyPreset({ w_base: 0.070, h_base: 0.180, x_base: -0.040, l_crank: 0.045, l_rod: 0.165, w_foot: 0.060, x_foot: -0.030, z_foot: -0.020 });
     });
-    document.getElementById('preset-torque').addEventListener('click', () => {
-      applyPreset({ w_base: 0.090, h_base: 0.200, x_base: -0.050, l_crank: 0.035, l_rod: 0.175, w_foot: 0.080, x_foot: -0.040, z_foot: -0.025 });
-    });
-    document.getElementById('preset-speed').addEventListener('click', () => {
-      applyPreset({ w_base: 0.060, h_base: 0.160, x_base: -0.030, l_crank: 0.055, l_rod: 0.150, w_foot: 0.050, x_foot: -0.025, z_foot: -0.015 });
-    });
-    document.getElementById('btn-reset-params').addEventListener('click', () => {
-      document.getElementById('preset-default').click();
-    });
 
-    // 步态模拟循环动画 (Gait Simulation Animation)
+    // 步态模拟循环动画
     let isWalking = false;
     let walkTimer = null;
     let walkT = 0;
@@ -2027,20 +2086,17 @@
 
         walkTimer = setInterval(() => {
           walkT += 0.04;
-          // 人类正常行走的矢状面俯仰与外力典型波形:
-          // 触地脚跟踩踏(Heel strike) -> 全脚着地(Mid stance) -> 离地蹬伸(Push-off) -> 摆动相(Swing)
           const pitchWave = 12.0 * Math.sin(walkT) - 5.0 * Math.cos(2 * walkT);
           const rollWave = 4.0 * Math.sin(walkT * 0.5);
 
-          // 支撑期垂直力变化 (双峰钟形曲线)
           const stancePhase = Math.sin(walkT);
           let fzVal = 0;
           let copX = 0.08;
           if (stancePhase > 0) {
             fzVal = 500 + 250 * Math.sin(stancePhase * Math.PI);
-            copX = -0.04 + 0.16 * stancePhase; // CoP 从后跟移往前掌
+            copX = -0.04 + 0.16 * stancePhase;
           } else {
-            fzVal = 0; // 悬空摆动
+            fzVal = 0;
           }
 
           model.pitch = pitchWave * Math.PI / 180.0;
@@ -2068,7 +2124,7 @@
       }
     });
 
-    // 数据导出 (JSON / CSV)
+    // 数据导出
     document.getElementById('btn-export-data').addEventListener('click', () => {
       if (!cachedCurveData) computeAnalyticalCurves();
       const exportObj = {
@@ -2076,8 +2132,10 @@
         current_state: {
           pitch_deg: model.pitch * 180 / Math.PI,
           roll_deg: model.roll * 180 / Math.PI,
-          theta1_deg: model.theta1 * 180 / Math.PI,
-          theta2_deg: model.theta2 * 180 / Math.PI,
+          theta1_deg_abs: model.theta1 * 180 / Math.PI,
+          theta2_deg_abs: model.theta2 * 180 / Math.PI,
+          delta_theta1_deg: (model.theta1 - model.neutralTheta1) * 180 / Math.PI,
+          delta_theta2_deg: (model.theta2 - model.neutralTheta2) * 180 / Math.PI,
           load: model.load
         },
         curves: cachedCurveData
@@ -2091,7 +2149,6 @@
       URL.revokeObjectURL(url);
     });
 
-    // 初始启动
     updateFullPipeline(true);
   </script>
 </body>
