@@ -20,8 +20,8 @@ const X_MIN = -30;
 const X_MAX = 25;
 const PAD = { left: 42, right: 14, top: 28, bottom: 24 };
 
-const GRID = 'rgba(148,163,184,0.10)';
-const AXIS_TEXT = 'rgba(148,163,184,0.72)';
+const GRID = 'rgba(63,91,120,0.16)';
+const AXIS_TEXT = '#52667d';
 
 function format(value: number, unit: string): string {
   const abs = Math.abs(value);
@@ -148,7 +148,7 @@ export class Chart {
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.font = '9px ui-monospace, Consolas, monospace';
-        ctx.fillStyle = 'rgba(52,211,153,0.6)';
+        ctx.fillStyle = '#16754e';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
         ctx.fillText(this.spec.band.label, plot.x + plot.w - 4, yFor(bottom) - 3);
@@ -175,7 +175,7 @@ export class Chart {
     ctx.textBaseline = 'top';
     for (let pitch = X_MIN; pitch <= X_MAX; pitch += 10) {
       const x = xFor(pitch);
-      ctx.strokeStyle = 'rgba(148,163,184,0.06)';
+      ctx.strokeStyle = 'rgba(63,91,120,0.10)';
       ctx.beginPath();
       ctx.moveTo(x, plot.y);
       ctx.lineTo(x, plot.y + plot.h);
@@ -226,7 +226,7 @@ export class Chart {
     const markerPitch = this.hoverPitch ?? state.pitchDeg;
     if (markerPitch >= X_MIN && markerPitch <= X_MAX) {
       const x = xFor(markerPitch);
-      ctx.strokeStyle = this.hoverPitch === null ? 'rgba(232,238,247,0.28)' : 'rgba(232,238,247,0.5)';
+      ctx.strokeStyle = this.hoverPitch === null ? 'rgba(49,75,103,0.35)' : 'rgba(49,75,103,0.58)';
       ctx.setLineDash([3, 3]);
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -239,7 +239,7 @@ export class Chart {
         const point = nearest(points, markerPitch);
         if (!point || point.value === null) continue;
         const y = yFor(point.value);
-        ctx.fillStyle = '#070b12';
+        ctx.fillStyle = '#fff';
         ctx.strokeStyle = spec.color;
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -265,7 +265,7 @@ export class Chart {
       ctx.beginPath();
       ctx.arc(x + 3, y, 3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(148,163,184,0.85)';
+      ctx.fillStyle = '#52667d';
       ctx.fillText(spec.label, x + 11, y + 0.5);
       x += 11 + ctx.measureText(spec.label).width + 14;
     }

@@ -5,16 +5,16 @@ import { CameraPose, VIEW_PRESETS, ViewPreset, WorkbenchState } from '../state/m
 const COLOR = {
   structure: '#8aa0bd',
   structureDim: 'rgba(138,160,189,0.4)',
-  motor1: '#38bdf8',
-  motor2: '#fbbf24',
-  platform: '#cbd5e1',
+  motor1: '#176d9f',
+  motor2: '#b84d19',
+  platform: '#8298b1',
   ground: 'rgba(120,145,175,0.10)',
   groundAxis: 'rgba(120,145,175,0.22)',
-  force: '#34d399',
-  label: '#94a3b8',
-  frameX: '#f87171',
-  frameY: '#4ade80',
-  frameZ: '#60a5fa'
+  force: '#16754e',
+  label: '#516780',
+  frameX: '#bb3b35',
+  frameY: '#16754e',
+  frameZ: '#285f9a'
 };
 
 interface Screen {
@@ -132,7 +132,7 @@ export class SceneView {
     const y2 = y1 * cp - z1 * sp;
     const z2 = y1 * sp + z1 * cp;
     const camZ = Math.max(0.08, y2 + dist);
-    const fov = Math.min(this.width, this.height) * 0.78;
+    const fov = Math.min(this.width * 1.25, this.height) * 1.22;
     const scale = this.isOrtho ? fov / dist : fov / camZ;
     return {
       x: this.width / 2 + (x1 + this.pan.x) * scale,
@@ -145,12 +145,6 @@ export class SceneView {
   private draw(): void {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
-    const background = ctx.createLinearGradient(0, 0, 0, height);
-    background.addColorStop(0, 'rgba(14,21,33,0.55)');
-    background.addColorStop(1, 'rgba(7,11,18,0.1)');
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, width, height);
-
     const state = this.frame;
     if (!state) return;
 
@@ -206,7 +200,7 @@ export class SceneView {
     const p = this.project(point);
     const r = Math.max(2, (radius * p.scale) / 520);
     const ctx = this.ctx;
-    ctx.fillStyle = '#0b1220';
+    ctx.fillStyle = '#fff';
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.6;
     ctx.beginPath();
@@ -223,8 +217,9 @@ export class SceneView {
     const ctx = this.ctx;
     const min = -0.34;
     const max = 0.36;
-    for (let value = min; value <= max + 1e-9; value += 0.045) {
-      const major = Math.abs(value) < 1e-6;
+    for (let index = -7; index <= 8; index++) {
+      const value = index * 0.045;
+      const major = index === 0;
       ctx.strokeStyle = major ? COLOR.groundAxis : COLOR.ground;
       ctx.lineWidth = 1;
       this.strokePath([[value, min, z], [value, max, z]]);
@@ -248,8 +243,8 @@ export class SceneView {
 
     // Central pillar / shank (小腿主支撑柱)
     this.link([0, 0, h], [0, 0, 0], 'rgba(148,163,184,0.55)', 5);
-    this.joint([0, 0, 0], '#94a3b8', 6);
-    this.joint([0, 0, h], '#94a3b8', 5);
+    this.joint([0, 0, 0], '#516780', 6);
+    this.joint([0, 0, h], '#516780', 5);
 
     // Universal joint U (虎克铰十字轴)
     const ctx = this.ctx;
@@ -295,7 +290,7 @@ export class SceneView {
     ]);
 
     const ctx = this.ctx;
-    ctx.fillStyle = 'rgba(56,189,248,0.055)';
+    ctx.fillStyle = 'rgba(52,119,175,0.13)';
     this.fillPath(outline);
     ctx.strokeStyle = 'rgba(148,163,184,0.5)';
     ctx.lineWidth = 1.3;
@@ -308,7 +303,6 @@ export class SceneView {
 
   private drawMotorAxis(A: Vec3, B: Vec3, theta: number, color: string): void {
     const { mech } = this.frame as WorkbenchState;
-    const axis: Vec3 = [0, 1, 0];
     const half = 0.055;
     const ctx = this.ctx;
     ctx.save();
@@ -360,8 +354,8 @@ export class SceneView {
     ctx.font = '10px ui-monospace, "Cascadia Mono", Consolas, monospace';
     const padding = 4;
     const w = ctx.measureText(text).width + padding * 2;
-    ctx.fillStyle = 'rgba(7,11,18,0.82)';
-    ctx.strokeStyle = 'rgba(56,189,248,0.25)';
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.strokeStyle = 'rgba(38,87,130,0.28)';
     ctx.lineWidth = 1;
     this.roundRect(x - w / 2, y - 16, w, 15, 4);
     ctx.fill();
@@ -430,20 +424,20 @@ export class SceneView {
     ctx.fill();
 
     ctx.font = '10px ui-monospace, Consolas, monospace';
-    ctx.fillStyle = 'rgba(52,211,153,0.9)';
+    ctx.fillStyle = '#16754e';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
     ctx.fillText(`${Math.round(load.Fz)} N`, q.x + 6, q.y - 2);
 
     ctx.beginPath();
     ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(52,211,153,0.85)';
+    ctx.fillStyle = '#16754e';
     ctx.fill();
 
     if (statics && statics.kind === 'ok') {
       const moment = this.project([base[0], base[1], base[2]]);
       ctx.font = '9px ui-sans-serif, system-ui';
-      ctx.fillStyle = 'rgba(148,163,184,0.75)';
+      ctx.fillStyle = '#405772';
       ctx.fillText('CoP', moment.x + 5, moment.y + 12);
     }
   }
@@ -461,7 +455,7 @@ export class SceneView {
     ctx.font = '10px ui-monospace, Consolas, monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(148,163,184,0.85)';
+    ctx.fillStyle = '#405772';
 
     const pA1 = this.project(A1);
     const pA2 = this.project(A2);
@@ -485,18 +479,18 @@ export class SceneView {
       const b1 = this.project(B1);
       const b2 = this.project(B2);
       if (Math.hypot(b1.x - b2.x, b1.y - b2.y) < 3) {
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = '#176d9f';
         ctx.fillText('B₁', b1.x + 7, b1.y + 8);
         const w = ctx.measureText('B₁').width;
-        ctx.fillStyle = 'rgba(148,163,184,0.85)';
+        ctx.fillStyle = '#405772';
         ctx.fillText('/', b1.x + 7 + w, b1.y + 8);
         const wSlash = ctx.measureText('/').width;
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = '#b84d19';
         ctx.fillText('B₂', b1.x + 7 + w + wSlash, b1.y + 8);
       } else {
-        ctx.fillStyle = 'rgba(56,189,248,0.9)';
+        ctx.fillStyle = '#176d9f';
         ctx.fillText('B₁', b1.x + 7, b1.y + 8);
-        ctx.fillStyle = 'rgba(251,191,36,0.9)';
+        ctx.fillStyle = '#b84d19';
         ctx.fillText('B₂', b2.x + 7, b2.y + 8);
       }
     }

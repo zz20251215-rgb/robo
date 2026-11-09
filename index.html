@@ -3,52 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
     <meta name="description" content="2-RSS+1-U 并联踝关节运动学、静力学与传力特性交互工作台" />
     <title>ANKLE · 2-RSS+1-U 踝关节工作台</title>
     <link rel="stylesheet" href="/src/styles/main.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <circle cx="9" cy="10" r="3.2" />
-          <circle cx="23" cy="10" r="3.2" />
-          <circle cx="16" cy="24" r="3.2" />
-          <path d="M9 10 16 24M23 10 16 24M9 10h14" />
-        </svg>
-        <div class="brand-text">
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
           <strong>ANKLE</strong>
-          <span>2-RSS+1-U 并联踝关节工作台</span>
+          <div>
+            <h1>并联踝关节数字实验室</h1>
+            <span>参数化机构建模与仿真验证平台</span>
+          </div>
         </div>
-      </div>
-      <div class="topbar-actions">
-        <span class="pill" id="health-pill" data-level="healthy">
-          <i></i>
-          <span id="health-text">传动正常</span>
-        </span>
-        <button class="btn" id="btn-gait" aria-pressed="false">
-          <span class="gait-dot"></span>
-          <span id="gait-text">步态演示</span>
-        </button>
-        <button class="btn ghost" id="btn-export">导出数据</button>
-        <button class="btn ghost" id="btn-reset-pose">复位姿态</button>
-      </div>
-    </header>
+        <span class="project-id">机构 <b>2-RSS + 1-U</b></span>
+      </header>
 
-    <main class="workspace">
-      <section class="stage card">
-        <div class="stage-view">
-          <canvas id="scene" aria-label="2-RSS+1-U 机构三维视图"></canvas>
-
+      <main class="workspace">
+        <section class="model-column" id="model" aria-label="机构建模">
           <div class="stage-dock card" id="stage-params">
             <div class="dock-header" id="stage-params-toggle" role="button" tabindex="0" aria-expanded="true" title="展开/收起机构尺寸">
-              <h2>机构尺寸</h2>
+              <h2><b class="index">01</b> 机构尺寸</h2>
               <span class="hint">mm</span>
               <i class="dock-chevron"></i>
             </div>
             <div class="dock-pager">
-              <div class="segmented wide dock-tabs" role="tablist" aria-label="机构尺寸分页">
+              <div class="segmented wide dock-tabs" role="group" aria-label="机构尺寸分页">
                 <button type="button" class="dock-tab-btn" data-param-tab="all" aria-pressed="true" title="查看全部机构尺寸">全部</button>
                 <button type="button" class="dock-tab-btn" data-param-tab="chain1" aria-pressed="false" title="支链 1 (左侧电机)">支链 1</button>
                 <button type="button" class="dock-tab-btn" data-param-tab="chain2" aria-pressed="false" title="支链 2 (右侧电机)">支链 2</button>
@@ -154,7 +136,7 @@
                 </div>
                 <div class="field compact">
                   <div class="field-header">
-                    <label for="param-wbase">基座半宽</label>
+                    <label for="param-wbase">电机轴间距</label>
                     <div class="num-wrap">
                       <input type="number" id="num-param-wbase" data-param-num="w_base" min="40" max="130" step="1" value="70" class="input-num" />
                       <span class="unit">mm</span>
@@ -174,7 +156,7 @@
                 </div>
                 <div class="field compact">
                   <div class="field-header">
-                    <label for="param-wfoot">足端半宽</label>
+                    <label for="param-wfoot">足端铰点间距</label>
                     <div class="num-wrap">
                       <input type="number" id="num-param-wfoot" data-param-num="w_foot" min="30" max="110" step="1" value="60" class="input-num" />
                       <span class="unit">mm</span>
@@ -214,71 +196,28 @@
               <button class="btn tiny ghost" id="btn-reset-params" title="重置为默认几何尺寸">恢复默认</button>
             </div>
           </div>
+          <figure class="card structure" id="structure">
+            <figcaption class="card-head">
+              <h2><b class="index">02</b> 结构示意图</h2>
+              <span class="hint">随仿真更新</span>
+            </figcaption>
+            <svg id="structure-view" viewBox="0 0 340 240" role="img" aria-labelledby="structure-title">
+              <title id="structure-title">两侧电机、曲柄、连杆、中央万向节和足板的装配示意</title>
+              <g id="structure-art"></g>
+            </svg>
+            <div class="structure-key">
+              <span><b>A</b> 电机轴心</span><span><b>B</b> 曲柄端球铰</span>
+              <span><b>C</b> 足端球铰</span><span><b>U</b> 万向节</span>
+            </div>
+            <p class="structure-note" id="structure-note">点划线为电机轴线（平行 Y）· 壳体外形为示意</p>
+          </figure>
+        </section>
 
-          <div class="stage-dock-right">
-            <details class="card diag" id="diagnostics" data-level="healthy" open>
-              <summary>
-                <h2>位形诊断</h2>
-                <span class="hint mono" id="diag-meta"></span>
-              </summary>
-              <div class="card-body">
-                <p class="diag-title" id="diag-title">—</p>
-                <p class="diag-advice" id="diag-advice"></p>
-                <dl class="diag-grid" id="diag-details"></dl>
-                <p class="diag-rod mono" id="rod-lengths"></p>
-              </div>
-            </details>
-
-            <details class="card" id="stage-loads" open>
-              <summary>
-                <h2>载荷与压力中心</h2>
-                <span class="hint">N · mm</span>
-              </summary>
-              <div class="card-body params">
-                <div class="field compact">
-                  <div class="field-header">
-                    <label for="load-fz">垂直力 Fz</label>
-                    <div class="num-wrap">
-                      <input type="number" id="num-load-fz" data-load-num="Fz" min="0" max="1000" step="5" value="500" class="input-num" />
-                      <span class="unit">N</span>
-                    </div>
-                  </div>
-                  <input type="range" id="load-fz" data-load="Fz" min="0" max="1000" step="5" value="500" />
-                </div>
-                <div class="field compact">
-                  <div class="field-header">
-                    <label for="load-fx">前后力 Fx</label>
-                    <div class="num-wrap">
-                      <input type="number" id="num-load-fx" data-load-num="Fx" min="-200" max="200" step="5" value="0" class="input-num" />
-                      <span class="unit">N</span>
-                    </div>
-                  </div>
-                  <input type="range" id="load-fx" data-load="Fx" min="-200" max="200" step="5" value="0" />
-                </div>
-                <div class="field compact">
-                  <div class="field-header">
-                    <label for="load-copx">CoP 前后</label>
-                    <div class="num-wrap">
-                      <input type="number" id="num-load-copx" data-load-num="x_cop" data-scale="1000" min="-60" max="140" step="1" value="80" class="input-num" />
-                      <span class="unit">mm</span>
-                    </div>
-                  </div>
-                  <input type="range" id="load-copx" data-load="x_cop" data-scale="1000" min="-60" max="140" step="5" value="80" />
-                </div>
-                <div class="field compact">
-                  <div class="field-header">
-                    <label for="load-copy">CoP 左右</label>
-                    <div class="num-wrap">
-                      <input type="number" id="num-load-copy" data-load-num="y_cop" data-scale="1000" min="-30" max="30" step="1" value="0" class="input-num" />
-                      <span class="unit">mm</span>
-                    </div>
-                  </div>
-                  <input type="range" id="load-copy" data-load="y_cop" data-scale="1000" min="-30" max="30" step="5" value="0" />
-                </div>
-              </div>
-            </details>
-          </div>
-
+        <section class="stage card" id="simulation">
+          <header class="card-head">
+            <h2><b class="index">03</b> 运动仿真</h2>
+            <span class="hint">交互球棍模型</span>
+          </header>
           <div class="stage-top">
             <div class="segmented" role="group" aria-label="视点">
               <button data-view="iso" aria-pressed="true">轴测</button>
@@ -292,149 +231,222 @@
               <button class="chip" id="btn-toggle-motor-axes" aria-pressed="true">电机轴</button>
             </div>
           </div>
-          <div class="stage-bottom">
-            <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
-            <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
-          </div>
-        </div>
-        <div class="metrics">
-          <div class="metric">
-            <span class="metric-label" id="m-lbl-theta1">θ₁ 电机 1</span>
-            <span class="metric-value" id="m-theta1">—</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label" id="m-lbl-theta2">θ₂ 电机 2</span>
-            <span class="metric-value" id="m-theta2">—</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">τ₁ 力矩</span>
-            <span class="metric-value" id="m-tau1">—</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">τ₂ 力矩</span>
-            <span class="metric-value" id="m-tau2">—</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">μ 最小传力角</span>
-            <span class="metric-value" id="m-mu">—</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">κ 条件数</span>
-            <span class="metric-value" id="m-cond">—</span>
-          </div>
-        </div>
-      </section>
-
-      <aside class="rail">
-        <section class="card pose-card">
-          <header class="card-head">
-            <h2>位姿</h2>
-            <span class="hint" id="fk-status"></span>
-          </header>
-          <div class="card-body">
-            <canvas id="pad" class="pad" aria-label="俯仰横滚触控盘"></canvas>
-            <div class="pad-legend">
-              <span><i data-level="healthy"></i>安全</span>
-              <span><i data-level="caution"></i>预警</span>
-              <span><i data-level="singular"></i>奇异</span>
-              <span><i data-level="unreachable"></i>无解</span>
-            </div>
-            <div class="field">
-              <label for="slider-pitch">Pitch 俯仰<output id="out-pitch">+0.0°</output></label>
-              <input type="range" id="slider-pitch" min="-30" max="25" step="0.5" value="0" />
-            </div>
-            <div class="field">
-              <label for="slider-roll">Roll 横滚<output id="out-roll">+0.0°</output></label>
-              <input type="range" id="slider-roll" min="-20" max="20" step="0.5" value="0" />
-            </div>
-            <div class="segmented wide" role="group" aria-label="驱动模式">
-              <button data-mode="ik" aria-pressed="true">逆解驱动</button>
-              <button data-mode="fk" aria-pressed="false">电机驱动</button>
-            </div>
-            <div class="segmented wide" role="group" aria-label="电机角显示">
-              <button data-angle="abs" aria-pressed="true">绝对角</button>
-              <button data-angle="rel" aria-pressed="false">相对角</button>
-            </div>
-            <div class="field" id="fk-controls" hidden>
-              <label for="slider-theta1"><span id="lbl-theta1">θ₁ 电机 1</span><output id="out-theta1">+0.0°</output></label>
-              <input type="range" id="slider-theta1" min="-45" max="90" step="0.1" value="31.2" />
-              <label for="slider-theta2"><span id="lbl-theta2">θ₂ 电机 2</span><output id="out-theta2">+0.0°</output></label>
-              <input type="range" id="slider-theta2" min="-45" max="90" step="0.1" value="31.2" />
-            </div>
-
-            <div class="pose-presets-section">
-              <span class="section-label">快速位姿预设</span>
-              <div class="pose-preset-chips">
-                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="0">中立 0°</button>
-                <button type="button" class="chip-preset" data-pose-p="15" data-pose-r="0">背屈 +15°</button>
-                <button type="button" class="chip-preset" data-pose-p="-15" data-pose-r="0">跖屈 -15°</button>
-                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="10">外翻 +10°</button>
-                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="-10">内翻 -10°</button>
-              </div>
-            </div>
-
-            <div class="kin-guide">
-              <div class="kin-guide-title">
-                <i class="kin-dot"></i>
-                <span>运动耦合规律</span>
-              </div>
-              <div class="kin-guide-grid">
-                <div><span class="guide-tag tag-cyan">同向转动</span>θ₁↑, θ₂↑ ➔ 俯仰背屈</div>
-                <div><span class="guide-tag tag-amber">同向转动</span>θ₁↓, θ₂↓ ➔ 俯仰跖屈</div>
-                <div><span class="guide-tag tag-purple">差动转动</span>θ₁↑, θ₂↓ ➔ 横滚外翻</div>
-                <div><span class="guide-tag tag-green">速度比</span><span class="mono" id="disp-trans-ratio">dθ/dPitch ≈ 1.09</span></div>
-              </div>
+          <div class="stage-view">
+            <canvas id="scene" aria-label="2-RSS+1-U 机构三维视图"></canvas>
+            <div class="stage-bottom">
+              <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
+              <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
             </div>
           </div>
-          <div class="card-actions pose-actions">
-            <span class="pose-tip">支持触控盘拖拽或滑块微调</span>
-            <button class="btn tiny ghost" id="btn-reset-pose-card">复位姿态</button>
+          <div class="topbar-actions">
+            <button class="btn" id="btn-gait" aria-pressed="false">
+              <span class="gait-dot"></span>
+              <span id="gait-text">步态演示</span>
+            </button>
+            <button class="btn ghost" id="btn-export">导出数据</button>
+            <button class="btn ghost" id="btn-reset-pose">复位姿态</button>
+          </div>
+          <div class="card-head results-head"><h2>关键结果</h2><span class="hint">当前位形</span></div>
+          <div class="metrics">
+            <div class="metric">
+              <span class="metric-label" id="m-lbl-theta1">θ₁ 电机 1</span>
+              <span class="metric-value" id="m-theta1">—</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label" id="m-lbl-theta2">θ₂ 电机 2</span>
+              <span class="metric-value" id="m-theta2">—</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">τ₁ 力矩</span>
+              <span class="metric-value" id="m-tau1">—</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">τ₂ 力矩</span>
+              <span class="metric-value" id="m-tau2">—</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">μ 最小传力角</span>
+              <span class="metric-value" id="m-mu">—</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">κ 条件数</span>
+              <span class="metric-value" id="m-cond">—</span>
+            </div>
           </div>
         </section>
-      </aside>
-    </main>
 
-    <section class="analysis">
-      <header class="analysis-head">
-        <h2>分析曲线</h2>
-        <span class="hint" id="chart-load-caption"></span>
-      </header>
-      <div class="charts">
-        <figure class="card chart">
-          <figcaption>
-            <h3>运动学映射</h3>
-            <output id="chart-kin-output">—</output>
-          </figcaption>
-          <canvas id="chart-kinematics" aria-label="电机转角随俯仰角变化曲线"></canvas>
-        </figure>
-        <figure class="card chart">
-          <figcaption>
-            <h3>静力学响应</h3>
-            <output id="chart-tau-output">—</output>
-          </figcaption>
-          <canvas id="chart-statics" aria-label="电机力矩随俯仰角变化曲线"></canvas>
-        </figure>
-        <figure class="card chart">
-          <figcaption>
-            <h3>传力角质量</h3>
-            <output id="chart-mu-output">—</output>
-          </figcaption>
-          <canvas id="chart-transmission" aria-label="传力角随俯仰角变化曲线"></canvas>
-        </figure>
-        <figure class="card chart">
-          <figcaption>
-            <h3>灵巧度</h3>
-            <output id="chart-cond-output">—</output>
-          </figcaption>
-          <canvas id="chart-dexterity" aria-label="条件数随俯仰角变化曲线"></canvas>
-        </figure>
-      </div>
-    </section>
+        <aside class="rail" aria-label="诊断与仿真控制">
+          <details class="card diag" id="diagnostics" data-level="healthy" open>
+            <summary>
+              <h2><b class="index">04</b> 位形诊断</h2>
+              <span class="pill" id="health-pill" data-level="healthy">
+                <i></i>
+                <span id="health-text">传动正常</span>
+              </span>
+            </summary>
+            <div class="card-body">
+              <div class="diag-heading">
+                <p class="diag-title" id="diag-title">—</p>
+                <span class="hint mono" id="diag-meta"></span>
+              </div>
+              <p class="diag-advice" id="diag-advice"></p>
+              <dl class="diag-grid" id="diag-details"></dl>
+              <p class="diag-rod mono" id="rod-lengths"></p>
+            </div>
+          </details>
+          <section class="card pose-card">
+            <header class="card-head">
+              <h2><b class="index">05</b> 位姿控制</h2>
+              <span class="hint" id="fk-status"></span>
+            </header>
+            <div class="card-body">
+              <canvas id="pad" class="pad" aria-label="俯仰横滚触控盘"></canvas>
+              <div class="pad-legend">
+                <span><i data-level="healthy"></i>安全</span>
+                <span><i data-level="caution"></i>预警</span>
+                <span><i data-level="singular"></i>奇异</span>
+                <span><i data-level="unreachable"></i>无解</span>
+              </div>
+              <div class="field">
+                <label for="slider-pitch">Pitch 俯仰<output id="out-pitch">+0.0°</output></label>
+                <input type="range" id="slider-pitch" min="-30" max="25" step="0.5" value="0" />
+              </div>
+              <div class="field">
+                <label for="slider-roll">Roll 横滚<output id="out-roll">+0.0°</output></label>
+                <input type="range" id="slider-roll" min="-20" max="20" step="0.5" value="0" />
+              </div>
+              <div class="segmented wide" role="group" aria-label="驱动模式">
+                <button data-mode="ik" aria-pressed="true">逆解驱动</button>
+                <button data-mode="fk" aria-pressed="false">电机驱动</button>
+              </div>
+              <div class="segmented wide" role="group" aria-label="电机角显示">
+                <button data-angle="abs" aria-pressed="true">绝对角</button>
+                <button data-angle="rel" aria-pressed="false">相对角</button>
+              </div>
+              <div class="field" id="fk-controls" hidden>
+                <label for="slider-theta1"><span id="lbl-theta1">θ₁ 电机 1</span><output id="out-theta1">+0.0°</output></label>
+                <input type="range" id="slider-theta1" min="-45" max="90" step="0.1" value="31.2" />
+                <label for="slider-theta2"><span id="lbl-theta2">θ₂ 电机 2</span><output id="out-theta2">+0.0°</output></label>
+                <input type="range" id="slider-theta2" min="-45" max="90" step="0.1" value="31.2" />
+              </div>
 
-    <footer class="foot">
-      <span>闭式逆解 · Newton 正解 · 虚功静力映射</span>
-      <span>θ 零位：曲柄垂直向下，中立角约 +31.2°；正角为背屈</span>
-    </footer>
+              <div class="pose-presets-section">
+                <span class="section-label">快速位姿预设</span>
+                <div class="pose-preset-chips">
+                  <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="0">中立 0°</button>
+                  <button type="button" class="chip-preset" data-pose-p="15" data-pose-r="0">背屈 +15°</button>
+                  <button type="button" class="chip-preset" data-pose-p="-15" data-pose-r="0">跖屈 -15°</button>
+                  <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="10">外翻 +10°</button>
+                  <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="-10">内翻 -10°</button>
+                </div>
+              </div>
+
+              <details class="kin-guide">
+                <summary class="kin-guide-title">运动耦合规律</summary>
+                <div class="kin-guide-grid">
+                  <div><span class="guide-tag tag-cyan">同向转动</span>θ₁↑, θ₂↑ ➔ 俯仰背屈</div>
+                  <div><span class="guide-tag tag-amber">同向转动</span>θ₁↓, θ₂↓ ➔ 俯仰跖屈</div>
+                  <div><span class="guide-tag tag-purple">差动转动</span>θ₁↑, θ₂↓ ➔ 横滚外翻</div>
+                  <div><span class="guide-tag tag-green">速度比</span><span class="mono" id="disp-trans-ratio">dθ/dPitch ≈ 1.09</span></div>
+                </div>
+              </details>
+            </div>
+            <div class="card-actions pose-actions">
+              <span class="pose-tip">支持触控盘拖拽或滑块微调</span>
+              <button class="btn tiny ghost" id="btn-reset-pose-card">复位姿态</button>
+            </div>
+          </section>
+          <details class="card" id="stage-loads">
+            <summary>
+              <h2><b class="index">06</b> 载荷与压力中心</h2>
+              <span class="hint">N · mm</span>
+            </summary>
+            <div class="card-body params">
+              <div class="field compact">
+                <div class="field-header">
+                  <label for="load-fz">垂直力 Fz</label>
+                  <div class="num-wrap">
+                    <input type="number" id="num-load-fz" data-load-num="Fz" min="0" max="1000" step="5" value="500" class="input-num" />
+                    <span class="unit">N</span>
+                  </div>
+                </div>
+                <input type="range" id="load-fz" data-load="Fz" min="0" max="1000" step="5" value="500" />
+              </div>
+              <div class="field compact">
+                <div class="field-header">
+                  <label for="load-fx">前后力 Fx</label>
+                  <div class="num-wrap">
+                    <input type="number" id="num-load-fx" data-load-num="Fx" min="-200" max="200" step="5" value="0" class="input-num" />
+                    <span class="unit">N</span>
+                  </div>
+                </div>
+                <input type="range" id="load-fx" data-load="Fx" min="-200" max="200" step="5" value="0" />
+              </div>
+              <div class="field compact">
+                <div class="field-header">
+                  <label for="load-copx">CoP 前后</label>
+                  <div class="num-wrap">
+                    <input type="number" id="num-load-copx" data-load-num="x_cop" data-scale="1000" min="-60" max="140" step="1" value="80" class="input-num" />
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+                <input type="range" id="load-copx" data-load="x_cop" data-scale="1000" min="-60" max="140" step="5" value="80" />
+              </div>
+              <div class="field compact">
+                <div class="field-header">
+                  <label for="load-copy">CoP 左右</label>
+                  <div class="num-wrap">
+                    <input type="number" id="num-load-copy" data-load-num="y_cop" data-scale="1000" min="-30" max="30" step="1" value="0" class="input-num" />
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+                <input type="range" id="load-copy" data-load="y_cop" data-scale="1000" min="-30" max="30" step="5" value="0" />
+              </div>
+            </div>
+          </details>
+        </aside>
+        <section class="analysis">
+          <header class="analysis-head">
+            <h2>分析曲线</h2>
+            <span class="hint" id="chart-load-caption"></span>
+          </header>
+          <div class="charts">
+            <figure class="card chart" id="kinematics">
+              <figcaption>
+                <h3><b class="index">07</b> 运动学映射</h3>
+                <output id="chart-kin-output">—</output>
+              </figcaption>
+              <canvas id="chart-kinematics" aria-label="电机转角随俯仰角变化曲线"></canvas>
+            </figure>
+            <figure class="card chart" id="statics">
+              <figcaption>
+                <h3><b class="index">08</b> 静力学响应</h3>
+                <output id="chart-tau-output">—</output>
+              </figcaption>
+              <canvas id="chart-statics" aria-label="电机力矩随俯仰角变化曲线"></canvas>
+            </figure>
+            <figure class="card chart">
+              <figcaption>
+                <h3>传力角质量</h3>
+                <output id="chart-mu-output">—</output>
+              </figcaption>
+              <canvas id="chart-transmission" aria-label="传力角随俯仰角变化曲线"></canvas>
+            </figure>
+            <figure class="card chart">
+              <figcaption>
+                <h3>灵巧度</h3>
+                <output id="chart-cond-output">—</output>
+              </figcaption>
+              <canvas id="chart-dexterity" aria-label="条件数随俯仰角变化曲线"></canvas>
+            </figure>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <span>闭式逆解 · Newton 正解 · 虚功静力映射</span>
+        <span>θ 零位：曲柄垂直向下，中立角约 +31.2°；正角为背屈</span>
+      </footer>
+    </div>
 
     <noscript>该工作台需要启用 JavaScript。</noscript>
     <script type="module" src="/src/main.ts"></script>

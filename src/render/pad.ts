@@ -12,10 +12,10 @@ const ROLL_MIN = -20;
 const ROLL_MAX = 20;
 
 const LEVEL_COLOR: Record<PoseLevel, [number, number, number, number]> = {
-  unreachable: [46, 16, 27, 190],
-  singular: [120, 32, 46, 210],
-  caution: [120, 74, 14, 185],
-  healthy: [14, 88, 72, 175]
+  unreachable: [134, 111, 149, 112],
+  singular: [211, 82, 105, 150],
+  caution: [228, 163, 69, 152],
+  healthy: [83, 164, 125, 136]
 };
 
 interface MapCache {
@@ -179,7 +179,7 @@ export class WorkspacePad {
     this.drawContour(plot, state);
 
     const cursor = this.projectPose(state.pitchDeg, state.rollDeg);
-    ctx.strokeStyle = 'rgba(232,238,247,0.35)';
+    ctx.strokeStyle = 'rgba(33,60,87,0.42)';
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
     ctx.moveTo(cursor.x, plot.y);
@@ -191,13 +191,13 @@ export class WorkspacePad {
 
     const dotColor =
       state.level === 'healthy'
-        ? '#34d399'
+        ? '#16754e'
         : state.level === 'caution'
-          ? '#fbbf24'
+          ? '#9a5b08'
           : state.level === 'singular'
-            ? '#fb7185'
+            ? '#a92e45'
             : '#64748b';
-    ctx.fillStyle = '#070b12';
+    ctx.fillStyle = '#fff';
     ctx.strokeStyle = dotColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -209,7 +209,7 @@ export class WorkspacePad {
       const hoverPose = this.toPose(this.hover.x, this.hover.y);
       if (hoverPose) {
         const p = this.projectPose(hoverPose.pitchDeg, hoverPose.rollDeg);
-        ctx.fillStyle = 'rgba(232,238,247,0.45)';
+        ctx.fillStyle = 'rgba(33,60,87,0.48)';
         ctx.beginPath();
         ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
         ctx.fill();
@@ -221,7 +221,7 @@ export class WorkspacePad {
   private drawTicks(plot: { x: number; y: number; w: number; h: number }): void {
     const ctx = this.ctx;
     ctx.font = '9px ui-monospace, Consolas, monospace';
-    ctx.fillStyle = 'rgba(148,163,184,0.65)';
+    ctx.fillStyle = '#465d76';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let pitch = PITCH_MIN; pitch <= PITCH_MAX; pitch += 5) {
@@ -253,7 +253,7 @@ export class WorkspacePad {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.font = '9px ui-monospace, Consolas, monospace';
-    ctx.fillStyle = 'rgba(56,189,248,0.75)';
+    ctx.fillStyle = '#176d9f';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(`可达 ${min.toFixed(0)}…${max.toFixed(0)}°`, (xFor(min) + xFor(max)) / 2, plot.y - 3);
@@ -265,13 +265,13 @@ export class WorkspacePad {
     const w = ctx.measureText(text).width + 10;
     const bx = Math.min(this.width - w - 4, Math.max(4, x - w / 2));
     const by = Math.max(4, y - 20);
-    ctx.fillStyle = 'rgba(7,11,18,0.88)';
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
     ctx.strokeStyle = 'rgba(148,163,184,0.3)';
     ctx.beginPath();
     ctx.roundRect(bx, by, w, 15, 4);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = '#cbd5e1';
+    ctx.fillStyle = '#1d344e';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, bx + w / 2, by + 8);

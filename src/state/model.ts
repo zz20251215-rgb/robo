@@ -23,7 +23,7 @@ export interface CameraPose {
 }
 
 export const VIEW_PRESETS: Record<ViewPreset, CameraPose> = {
-  iso: { yaw: -0.75, pitch: 0.35, dist: 0.58 },
+  iso: { yaw: -1.15, pitch: 0.35, dist: 0.58 },
   side: { yaw: -Math.PI / 2, pitch: 0, dist: 0.55 },
   front: { yaw: 0, pitch: 0, dist: 0.55 },
   top: { yaw: 0, pitch: Math.PI / 2 - 1e-4, dist: 0.6 }
