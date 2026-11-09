@@ -1,26 +1,24 @@
-import { AnkleMechanism, FootLoad, Statics } from '../core/mechanism';
-import { classify, PoseLevel } from '../core/assessment';
-import { clamp, rad } from '../core/math';
-import { WorkbenchState } from '../state/model';
+import { AnkleMechanism } from '../core/mechanism';
+import { PoseLevel } from '../core/assessment';
+import { clamp } from '../core/math';
+import { poseLevelAt } from '../core/workspace';
+import { POSE_COLORS } from './palette';
+import { POSE_LIMITS, WorkbenchState } from '../state/model';
 
 const PAD = { left: 34, right: 12, top: 12, bottom: 22 };
-const MAP_W = 50;
-const MAP_H = 40;
-const PITCH_MIN = -30;
-const PITCH_MAX = 25;
-const ROLL_MIN = -20;
-const ROLL_MAX = 20;
+const MAP_W = 110;
+const MAP_H = 80;
+const {
+  pitchMin: PITCH_MIN, pitchMax: PITCH_MAX, rollMin: ROLL_MIN, rollMax: ROLL_MAX
+} = POSE_LIMITS;
 
-const LEVEL_COLOR: Record<PoseLevel, [number, number, number, number]> = {
-  unreachable: [134, 111, 149, 112],
-  singular: [211, 82, 105, 150],
-  caution: [228, 163, 69, 152],
-  healthy: [83, 164, 125, 136]
-};
+type Segment = [x1: number, y1: number, x2: number, y2: number];
 
 interface MapCache {
   signature: string;
-  image: ImageData;
+  canvas: HTMLCanvasElement;
+  reachableEdge: Segment[];
+  warningEdge: Segment[];
 }
 
 /**
@@ -36,7 +34,7 @@ export class WorkspacePad {
   private width = 0;
   private height = 0;
   private dpr = 1;
-  private dragging = false;
+  private pointerId: number | null = null;
   private hover: { x: number; y: number } | null = null;
 
   constructor(canvas: HTMLCanvasElement, onPose: (pitchDeg: number, rollDeg: number) => void) {
@@ -52,14 +50,17 @@ export class WorkspacePad {
 
   render(state: WorkbenchState): void {
     this.state = state;
+    const signature = JSON.stringify(state.params);
+    if (this.cache?.signature !== signature) {
+      this.cache = { signature, ...this.buildMap(state.mech) };
+    }
     this.draw();
   }
 
   private resize(): void {
-    const rect = this.canvas.getBoundingClientRect();
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
-    this.width = Math.max(1, Math.round(rect.width));
-    this.height = Math.max(1, Math.round(rect.height));
+    this.width = Math.max(1, this.canvas.clientWidth);
+    this.height = Math.max(1, this.canvas.clientHeight);
     this.canvas.width = Math.round(this.width * this.dpr);
     this.canvas.height = Math.round(this.height * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -68,32 +69,42 @@ export class WorkspacePad {
 
   private bindPointer(): void {
     const c = this.canvas;
-    const update = (event: PointerEvent): void => {
+    const position = (event: PointerEvent): { x: number; y: number } => {
       const rect = c.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      return { x: event.clientX - rect.left - c.clientLeft, y: event.clientY - rect.top - c.clientTop };
+    };
+    const update = (x: number, y: number): void => {
       const pose = this.toPose(x, y);
-      if (pose) this.onPose(pose.pitchDeg, pose.rollDeg);
+      this.onPose(pose.pitchDeg, pose.rollDeg);
     };
     c.addEventListener('pointerdown', (event) => {
-      this.dragging = true;
+      if (event.button !== 0 || this.pointerId !== null) return;
+      const { x, y } = position(event);
+      if (!this.insidePlot(x, y)) return;
+      this.pointerId = event.pointerId;
+      this.hover = null;
       c.setPointerCapture(event.pointerId);
       c.classList.add('is-dragging');
-      update(event);
+      update(x, y);
     });
     c.addEventListener('pointermove', (event) => {
-      const rect = c.getBoundingClientRect();
-      this.hover = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-      if (this.dragging) update(event);
-      else this.draw();
+      const { x, y } = position(event);
+      if (this.pointerId === event.pointerId) {
+        update(x, y);
+      } else if (this.pointerId === null) {
+        this.hover = this.insidePlot(x, y) ? { x, y } : null;
+        this.draw();
+      }
     });
     const end = (event: PointerEvent): void => {
-      this.dragging = false;
+      if (this.pointerId !== event.pointerId) return;
+      this.pointerId = null;
       c.classList.remove('is-dragging');
-      if (c.hasPointerCapture(event.pointerId)) c.releasePointerCapture(event.pointerId);
+      this.draw();
     };
     c.addEventListener('pointerup', end);
     c.addEventListener('pointercancel', end);
+    c.addEventListener('lostpointercapture', end);
     c.addEventListener('pointerleave', () => {
       this.hover = null;
       this.draw();
@@ -109,9 +120,13 @@ export class WorkspacePad {
     };
   }
 
-  private toPose(x: number, y: number): { pitchDeg: number; rollDeg: number } | null {
+  private insidePlot(x: number, y: number): boolean {
     const plot = this.plot();
-    if (x < plot.x - 6 || x > plot.x + plot.w + 6 || y < plot.y - 6 || y > plot.y + plot.h + 6) return null;
+    return x >= plot.x && x <= plot.x + plot.w && y >= plot.y && y <= plot.y + plot.h;
+  }
+
+  private toPose(x: number, y: number): { pitchDeg: number; rollDeg: number } {
+    const plot = this.plot();
     const pitchDeg = PITCH_MIN + clamp((x - plot.x) / plot.w, 0, 1) * (PITCH_MAX - PITCH_MIN);
     const rollDeg = ROLL_MAX - clamp((y - plot.y) / plot.h, 0, 1) * (ROLL_MAX - ROLL_MIN);
     return { pitchDeg, rollDeg };
@@ -125,50 +140,56 @@ export class WorkspacePad {
     };
   }
 
-  private buildMap(mech: AnkleMechanism, load: FootLoad): ImageData {
-    const image = this.ctx.createImageData(MAP_W, MAP_H);
+  private buildMap(mech: AnkleMechanism): Omit<MapCache, 'signature'> {
+    const canvas = document.createElement('canvas');
+    canvas.width = MAP_W;
+    canvas.height = MAP_H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('2D canvas context unavailable');
+    const palette = Object.fromEntries(Object.entries(POSE_COLORS).map(([level, { fill }]) => [
+      level, Number.parseInt(fill.slice(1), 16)
+    ]));
+    const image = ctx.createImageData(MAP_W, MAP_H);
+    const levels: PoseLevel[] = [];
+    const reachableEdge: Segment[] = [];
+    const warningEdge: Segment[] = [];
+    const markEdge = (a: PoseLevel, b: PoseLevel, segment: Segment): void => {
+      if (a === b) return;
+      if (a === 'unreachable' || b === 'unreachable') reachableEdge.push(segment);
+      else if (a === 'healthy' || b === 'healthy') warningEdge.push(segment);
+    };
     for (let row = 0; row < MAP_H; row++) {
       const rollDeg = ROLL_MAX - ((row + 0.5) / MAP_H) * (ROLL_MAX - ROLL_MIN);
       for (let col = 0; col < MAP_W; col++) {
         const pitchDeg = PITCH_MIN + ((col + 0.5) / MAP_W) * (PITCH_MAX - PITCH_MIN);
-        const pitch = rad(pitchDeg);
-        const roll = rad(rollDeg);
-        const ik = mech.solveIK(pitch, roll);
-        let statics: Statics | null = null;
-        if (ik.ok) statics = mech.statics(pitch, roll, ik.theta1, ik.theta2, load);
-        const [r, g, b, a] = LEVEL_COLOR[classify(statics)];
-        const offset = (row * MAP_W + col) * 4;
-        image.data[offset] = r;
-        image.data[offset + 1] = g;
-        image.data[offset + 2] = b;
-        image.data[offset + 3] = a;
+        const level = poseLevelAt(mech, pitchDeg, rollDeg);
+        const index = row * MAP_W + col;
+        levels.push(level);
+        if (col > 0) markEdge(level, levels[index - 1], [col, row, col, row + 1]);
+        if (row > 0) markEdge(level, levels[index - MAP_W], [col, row, col + 1, row]);
+        const color = palette[level];
+        const offset = index * 4;
+        image.data[offset] = color >> 16;
+        image.data[offset + 1] = (color >> 8) & 255;
+        image.data[offset + 2] = color & 255;
+        image.data[offset + 3] = 255;
       }
     }
-    return image;
+    ctx.putImageData(image, 0, 0);
+    return { canvas, reachableEdge, warningEdge };
   }
 
   private draw(): void {
     const { ctx, width, height } = this;
     ctx.clearRect(0, 0, width, height);
     const state = this.state;
-    if (!state) return;
+    const cache = this.cache;
+    if (!state || !cache) return;
     const plot = this.plot();
 
-    const signature = `${JSON.stringify(state.params)}|${state.load.Fz}|${state.load.Fx}`;
-    if (!this.cache || this.cache.signature !== signature) {
-      this.cache = { signature, image: this.buildMap(state.mech, state.load) };
-    }
-
-    const off = document.createElement('canvas');
-    off.width = MAP_W;
-    off.height = MAP_H;
-    off.getContext('2d')?.putImageData(this.cache.image, 0, 0);
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(plot.x, plot.y, plot.w, plot.h);
-    ctx.clip();
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off, plot.x, plot.y, plot.w, plot.h);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(cache.canvas, plot.x, plot.y, plot.w, plot.h);
     ctx.restore();
 
     ctx.strokeStyle = 'rgba(148,163,184,0.22)';
@@ -176,7 +197,8 @@ export class WorkspacePad {
     ctx.strokeRect(plot.x + 0.5, plot.y + 0.5, plot.w - 1, plot.h - 1);
 
     this.drawTicks(plot);
-    this.drawContour(plot, state);
+    this.drawBoundary(plot, cache.reachableEdge, POSE_COLORS.unreachable.ink);
+    this.drawBoundary(plot, cache.warningEdge, POSE_COLORS.caution.ink);
 
     const cursor = this.projectPose(state.pitchDeg, state.rollDeg);
     ctx.strokeStyle = 'rgba(33,60,87,0.42)';
@@ -189,32 +211,22 @@ export class WorkspacePad {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const dotColor =
-      state.level === 'healthy'
-        ? '#16754e'
-        : state.level === 'caution'
-          ? '#9a5b08'
-          : state.level === 'singular'
-            ? '#a92e45'
-            : '#64748b';
     ctx.fillStyle = '#fff';
-    ctx.strokeStyle = dotColor;
+    ctx.strokeStyle = POSE_COLORS[state.level].ink;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(cursor.x, cursor.y, 4.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    if (this.hover && !this.dragging) {
-      const hoverPose = this.toPose(this.hover.x, this.hover.y);
-      if (hoverPose) {
-        const p = this.projectPose(hoverPose.pitchDeg, hoverPose.rollDeg);
-        ctx.fillStyle = 'rgba(33,60,87,0.48)';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
-        ctx.fill();
-        this.tag(`${hoverPose.pitchDeg.toFixed(0)}° / ${hoverPose.rollDeg.toFixed(0)}°`, p.x, p.y);
-      }
+    if (this.hover && this.pointerId === null) {
+      const pose = this.toPose(this.hover.x, this.hover.y);
+      const p = this.projectPose(pose.pitchDeg, pose.rollDeg);
+      ctx.fillStyle = 'rgba(33,60,87,0.48)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      this.tag(`${pose.pitchDeg.toFixed(0)}° / ${pose.rollDeg.toFixed(0)}°`, p.x, p.y);
     }
   }
 
@@ -236,27 +248,24 @@ export class WorkspacePad {
     }
   }
 
-  private drawContour(plot: { x: number; y: number; w: number; h: number }, state: WorkbenchState): void {
-    if (!state.reach) return;
-    const xFor = (pitch: number): number => plot.x + ((pitch - PITCH_MIN) / (PITCH_MAX - PITCH_MIN)) * plot.w;
-    const min = Math.max(PITCH_MIN, state.reach.min);
-    const max = Math.min(PITCH_MAX, state.reach.max);
-    if (min > max) return;
+  private drawBoundary(
+    plot: { x: number; y: number; w: number; h: number },
+    segments: Segment[],
+    color: string
+  ): void {
     const ctx = this.ctx;
-    ctx.strokeStyle = 'rgba(56,189,248,0.35)';
-    ctx.setLineDash([5, 4]);
+    const dx = plot.w / MAP_W;
+    const dy = plot.h / MAP_H;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'square';
     ctx.beginPath();
-    ctx.moveTo(xFor(min), plot.y);
-    ctx.lineTo(xFor(min), plot.y + plot.h);
-    ctx.moveTo(xFor(max), plot.y);
-    ctx.lineTo(xFor(max), plot.y + plot.h);
+    for (const [x1, y1, x2, y2] of segments) {
+      ctx.moveTo(plot.x + x1 * dx, plot.y + y1 * dy);
+      ctx.lineTo(plot.x + x2 * dx, plot.y + y2 * dy);
+    }
     ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font = '9px ui-monospace, Consolas, monospace';
-    ctx.fillStyle = '#176d9f';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(`可达 ${min.toFixed(0)}…${max.toFixed(0)}°`, (xFor(min) + xFor(max)) / 2, plot.y - 3);
+    ctx.lineCap = 'butt';
   }
 
   private tag(text: string, x: number, y: number): void {

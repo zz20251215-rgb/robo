@@ -31,21 +31,10 @@
             </div>
             <div class="dock-pager">
               <div class="segmented wide dock-tabs" role="group" aria-label="机构尺寸分页">
-                <button type="button" class="dock-tab-btn" data-param-tab="all" aria-pressed="true" title="查看全部机构尺寸">全部</button>
+                <button type="button" class="dock-tab-btn" data-param-tab="all" aria-pressed="true" title="查看全部机构尺寸，可滚动">全部</button>
                 <button type="button" class="dock-tab-btn" data-param-tab="chain1" aria-pressed="false" title="支链 1 (左侧电机)">支链 1</button>
                 <button type="button" class="dock-tab-btn" data-param-tab="chain2" aria-pressed="false" title="支链 2 (右侧电机)">支链 2</button>
                 <button type="button" class="dock-tab-btn" data-param-tab="base" aria-pressed="false" title="机架与足端几何">机架几何</button>
-              </div>
-              <div class="dock-page-nav">
-                <button type="button" class="btn-page-nav" id="btn-param-prev" title="翻到上一页" aria-label="上一页">
-                  <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><path d="M10.5 3.5L6 8l4.5 4.5-.7.7L5 8l4.8-5.2.7.7z"/></svg>
-                  <span>上一页</span>
-                </button>
-                <span class="dock-page-badge" id="param-page-badge">全部 (可上下滚动)</span>
-                <button type="button" class="btn-page-nav" id="btn-param-next" title="翻到下一页" aria-label="下一页">
-                  <span>下一页</span>
-                  <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><path d="M5.5 3.5L10 8l-4.5 4.5.7.7L11 8 6.2 2.8l-.7.7z"/></svg>
-                </button>
               </div>
             </div>
             <div class="card-body params" id="stage-params-body">
@@ -216,26 +205,30 @@
         <section class="stage card" id="simulation">
           <header class="card-head">
             <h2><b class="index">03</b> 运动仿真</h2>
-            <span class="hint">交互球棍模型</span>
+            <span class="hint">拖拽旋转 · 滚轮缩放</span>
           </header>
           <div class="stage-top">
             <div class="segmented" role="group" aria-label="视点">
               <button data-view="iso" aria-pressed="true">轴测</button>
-              <button data-view="side" aria-pressed="false">侧视</button>
-              <button data-view="front" aria-pressed="false">正视</button>
-              <button data-view="top" aria-pressed="false">俯视</button>
+              <button data-view="side" aria-pressed="false" title="投影到 Y–Z 平面">侧视</button>
+              <button data-view="front" aria-pressed="false" title="投影到 X–Z 平面">正视</button>
+              <button data-view="top" aria-pressed="false" title="投影到 X–Y 平面">俯视</button>
             </div>
             <div class="stage-toggles">
-              <button class="chip" id="btn-toggle-params" aria-pressed="true" title="展开/收起机构尺寸面板">机构尺寸</button>
-              <button class="chip" id="btn-toggle-frames" aria-pressed="true">坐标系</button>
-              <button class="chip" id="btn-toggle-motor-axes" aria-pressed="true">电机轴</button>
+              <button class="chip" id="btn-toggle-labels" aria-pressed="true" title="显示 A、B、C 和 U 的关节标注">关节标签</button>
+              <button class="chip" id="btn-toggle-frames" aria-pressed="true" title="显示机架轴向 · ⊙ 朝向观察者，⊗ 背向观察者">机架轴向</button>
+              <button class="chip" id="btn-toggle-motor-axes" aria-pressed="true" title="显示 Y 向电机轴线和曲柄绝对角弧">电机轴线</button>
             </div>
           </div>
           <div class="stage-view">
             <canvas id="scene" aria-label="2-RSS+1-U 机构三维视图"></canvas>
-            <div class="stage-bottom">
-              <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
-              <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
+          </div>
+          <div class="stage-bottom">
+            <output class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</output>
+            <div class="scene-legend" aria-label="球棍视图图例">
+              <span><i class="dot dot-motor1"></i> 支链 1</span>
+              <span><i class="dot dot-motor2"></i> 支链 2</span>
+              <span><i class="dot dot-load"></i> 载荷 / CoP</span>
             </div>
           </div>
           <div class="topbar-actions">
@@ -309,11 +302,11 @@
               </div>
               <div class="field">
                 <label for="slider-pitch">Pitch 俯仰<output id="out-pitch">+0.0°</output></label>
-                <input type="range" id="slider-pitch" min="-30" max="25" step="0.5" value="0" />
+                <input type="range" id="slider-pitch" class="pose-slider" title="绿色为正常区，橙色为需留意的区间" min="-30" max="25" step="any" value="0" />
               </div>
               <div class="field">
                 <label for="slider-roll">Roll 横滚<output id="out-roll">+0.0°</output></label>
-                <input type="range" id="slider-roll" min="-20" max="20" step="0.5" value="0" />
+                <input type="range" id="slider-roll" class="pose-slider" title="绿色为正常区，橙色为需留意的区间" min="-20" max="20" step="any" value="0" />
               </div>
               <div class="segmented wide" role="group" aria-label="驱动模式">
                 <button data-mode="ik" aria-pressed="true">逆解驱动</button>
@@ -350,10 +343,6 @@
                   <div><span class="guide-tag tag-green">速度比</span><span class="mono" id="disp-trans-ratio">dθ/dPitch ≈ 1.09</span></div>
                 </div>
               </details>
-            </div>
-            <div class="card-actions pose-actions">
-              <span class="pose-tip">支持触控盘拖拽或滑块微调</span>
-              <button class="btn tiny ghost" id="btn-reset-pose-card">复位姿态</button>
             </div>
           </section>
           <details class="card" id="stage-loads">

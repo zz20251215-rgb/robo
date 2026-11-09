@@ -1,3 +1,5 @@
+import { clamp } from '../core/math';
+import { poseLevelAt, scanWorkspaceSlice, WorkspaceSlice } from '../core/workspace';
 import { FootLoad, MechanismParams } from '../core/mechanism';
 import { Workbench, WorkbenchState, ViewPreset, POSE_LIMITS } from '../state/model';
 
@@ -29,11 +31,10 @@ export class Controls {
   private readonly gaitText: HTMLElement;
   private readonly paramTabs: HTMLButtonElement[];
   private readonly paramSections: HTMLElement[];
-  private readonly paramBadge: HTMLElement | null;
-  private readonly btnParamPrev: HTMLButtonElement | null;
-  private readonly btnParamNext: HTMLButtonElement | null;
-  private currentParamTab: 'all' | 'chain1' | 'chain2' | 'base' = 'all';
-  private static readonly TAB_ORDER = ['all', 'chain1', 'chain2', 'base'] as const;
+
+  private pitchSlice: { fixedAngle: number; slice: WorkspaceSlice } | null = null;
+  private rollSlice: { fixedAngle: number; slice: WorkspaceSlice } | null = null;
+  private geometry: MechanismParams | null = null;
 
   constructor(
     private readonly wb: Workbench,
@@ -53,9 +54,6 @@ export class Controls {
     this.gaitText = must('#gait-text');
     this.paramTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-param-tab]')];
     this.paramSections = [...document.querySelectorAll<HTMLElement>('[data-tab-section]')];
-    this.paramBadge = document.querySelector<HTMLElement>('#param-page-badge');
-    this.btnParamPrev = document.querySelector<HTMLButtonElement>('#btn-param-prev');
-    this.btnParamNext = document.querySelector<HTMLButtonElement>('#btn-param-next');
     this.bind();
   }
 
@@ -102,8 +100,7 @@ export class Controls {
     const offset1 = state.angleMode === 'rel' ? (state.neutralTheta1Deg ?? state.neutralThetaDeg) : 0;
     const offset2 = state.angleMode === 'rel' ? (state.neutralTheta2Deg ?? state.neutralThetaDeg) : 0;
 
-    setValue(this.pitch, state.pitchDeg);
-    setValue(this.roll, state.rollDeg);
+    this.syncPoseSliders(state);
 
     const min1 = POSE_LIMITS.motorMin - offset1;
     const max1 = POSE_LIMITS.motorMax - offset1;
@@ -120,8 +117,6 @@ export class Controls {
 
     const fk = state.inputMode === 'fk';
     this.fkRow.hidden = !fk;
-    this.pitch.disabled = fk;
-    this.roll.disabled = fk;
     this.theta1.disabled = !fk;
     this.theta2.disabled = !fk;
 
@@ -134,10 +129,33 @@ export class Controls {
     for (const button of document.querySelectorAll<HTMLButtonElement>('[data-view]')) {
       button.setAttribute('aria-pressed', String(button.dataset.view === state.view));
     }
+    must('#btn-toggle-labels').setAttribute('aria-pressed', String(state.showJointLabels));
     must('#btn-toggle-frames').setAttribute('aria-pressed', String(state.showFrames));
     must('#btn-toggle-motor-axes').setAttribute('aria-pressed', String(state.showMotorAxes));
     this.gait.setAttribute('aria-pressed', String(state.walking));
     this.gaitText.textContent = state.walking ? '暂停演示' : '步态演示';
+  }
+
+  private syncPoseSliders({ mech, params, pitchDeg, rollDeg, inputMode }: WorkbenchState): void {
+    if (params !== this.geometry) {
+      this.geometry = params;
+      this.pitchSlice = this.rollSlice = null;
+    }
+    if (this.pitchSlice?.fixedAngle !== rollDeg) {
+      this.pitchSlice = {
+        fixedAngle: rollDeg,
+        slice: scanWorkspaceSlice((angle) => poseLevelAt(mech, angle, rollDeg), POSE_LIMITS.pitchMin, POSE_LIMITS.pitchMax)
+      };
+    }
+    if (this.rollSlice?.fixedAngle !== pitchDeg) {
+      this.rollSlice = {
+        fixedAngle: pitchDeg,
+        slice: scanWorkspaceSlice((angle) => poseLevelAt(mech, pitchDeg, angle), POSE_LIMITS.rollMin, POSE_LIMITS.rollMax)
+      };
+    }
+    const fk = inputMode === 'fk';
+    setPoseSlider(this.pitch, pitchDeg, this.pitchSlice.slice, fk);
+    setPoseSlider(this.roll, rollDeg, this.rollSlice.slice, fk);
   }
 
   private handleParamChange(key: keyof MechanismParams, valMm: number): void {
@@ -213,8 +231,8 @@ export class Controls {
       });
     }
 
-    this.pitch.addEventListener('input', () => this.wb.setPose(Number(this.pitch.value), this.wb.state.rollDeg));
-    this.roll.addEventListener('input', () => this.wb.setPose(this.wb.state.pitchDeg, Number(this.roll.value)));
+    this.pitch.addEventListener('input', () => this.wb.setPadPose(Number(this.pitch.value), this.wb.state.rollDeg));
+    this.roll.addEventListener('input', () => this.wb.setPadPose(this.wb.state.pitchDeg, Number(this.roll.value)));
     this.theta1.addEventListener('input', () => {
       const offset1 = this.wb.state.angleMode === 'rel' ? (this.wb.state.neutralTheta1Deg ?? this.wb.state.neutralThetaDeg) : 0;
       const absTheta1 = Number(this.theta1.value) + offset1;
@@ -240,6 +258,7 @@ export class Controls {
       });
     }
 
+    must('#btn-toggle-labels').addEventListener('click', () => this.wb.toggleJointLabels());
     must('#btn-toggle-frames').addEventListener('click', () => this.wb.toggleFrames());
     must('#btn-toggle-motor-axes').addEventListener('click', () => this.wb.toggleMotorAxes());
     must('#btn-reset-pose').addEventListener('click', () => this.wb.resetPose());
@@ -253,21 +272,13 @@ export class Controls {
         this.setParamTab(tab);
       });
     }
-    this.btnParamPrev?.addEventListener('click', () => this.cycleParamTab(-1));
-    this.btnParamNext?.addEventListener('click', () => this.cycleParamTab(1));
 
-    for (const dock of document.querySelectorAll<HTMLElement>('.stage-dock, .stage-dock-right')) {
-      dock.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-    }
-
-    const toggleBtn = document.querySelector<HTMLButtonElement>('#btn-toggle-params');
     const toggle = document.querySelector<HTMLElement>('#stage-params-toggle');
     const dock = document.querySelector<HTMLElement>('#stage-params');
     if (dock) {
       const onToggle = (): void => {
         const isCollapsed = dock.classList.toggle('collapsed');
         toggle?.setAttribute('aria-expanded', String(!isCollapsed));
-        toggleBtn?.setAttribute('aria-pressed', String(!isCollapsed));
       };
       toggle?.addEventListener('click', onToggle);
       toggle?.addEventListener('keydown', (e) => {
@@ -276,7 +287,6 @@ export class Controls {
           onToggle();
         }
       });
-      toggleBtn?.addEventListener('click', onToggle);
     }
 
     for (const presetBtn of document.querySelectorAll<HTMLButtonElement>('[data-preset]')) {
@@ -336,15 +346,9 @@ export class Controls {
         this.wb.setPose(p, r);
       });
     }
-
-    const resetPoseCard = document.querySelector<HTMLButtonElement>('#btn-reset-pose-card');
-    if (resetPoseCard) {
-      resetPoseCard.addEventListener('click', () => this.wb.resetPose());
-    }
   }
 
-  setParamTab(tab: 'all' | 'chain1' | 'chain2' | 'base'): void {
-    this.currentParamTab = tab;
+  private setParamTab(tab: 'all' | 'chain1' | 'chain2' | 'base'): void {
     for (const btn of this.paramTabs) {
       btn.setAttribute('aria-pressed', String(btn.dataset.paramTab === tab));
     }
@@ -352,22 +356,7 @@ export class Controls {
       const target = sec.dataset.tabSection;
       sec.hidden = tab !== 'all' && target !== tab;
     }
-    if (this.paramBadge) {
-      const titles: Record<string, string> = {
-        all: '全部 (可上下滚动)',
-        chain1: '1/3 · 支链 1 (左侧)',
-        chain2: '2/3 · 支链 2 (右侧)',
-        base: '3/3 · 机架与足端',
-      };
-      this.paramBadge.textContent = titles[tab] ?? '全部';
-    }
-  }
-
-  private cycleParamTab(direction: 1 | -1): void {
-    const list = Controls.TAB_ORDER;
-    const curIdx = list.indexOf(this.currentParamTab);
-    const nextIdx = (curIdx + direction + list.length) % list.length;
-    this.setParamTab(list[nextIdx]);
+    must('#stage-params-body').scrollTop = 0;
   }
 }
 
@@ -377,6 +366,41 @@ export function updateSliderTrack(input: HTMLInputElement): void {
   const val = Number(input.value !== '' ? input.value : '0');
   const pct = max > min ? Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)) : 50;
   input.style.setProperty('--pct', `${pct.toFixed(2)}%`);
+}
+
+function setPoseSlider(input: HTMLInputElement, value: number, slice: WorkspaceSlice, fk: boolean): void {
+  const distance = ({ min, max }: WorkspaceSlice['reachable'][number]): number =>
+    Math.abs(value - clamp(value, min, max));
+  const interval = slice.reachable.reduce<WorkspaceSlice['reachable'][number] | undefined>(
+    (nearest, candidate) => !nearest || distance(candidate) < distance(nearest) ? candidate : nearest,
+    undefined
+  );
+  input.disabled = fk || !interval || interval.min === interval.max;
+  const { min, max } = interval ?? { min: value, max: value };
+  if (Number(input.min) !== min) input.min = String(min);
+  if (Number(input.max) !== max) input.max = String(max);
+  const position = clamp(value, min, max);
+  if (input.valueAsNumber !== position) input.valueAsNumber = position;
+  if (max === min) {
+    input.style.removeProperty('--pose-track');
+    return;
+  }
+
+  const stops = ['var(--pose-caution-fill) 0%'];
+  const percent = (angle: number): string => `${100 * (angle - min) / (max - min)}%`;
+  for (const normal of slice.healthy) {
+    const start = Math.max(min, normal.min);
+    const end = Math.min(max, normal.max);
+    if (start >= end) continue;
+    stops.push(
+      `var(--pose-caution-fill) ${percent(start)}`,
+      `var(--pose-healthy-fill) ${percent(start)} ${percent(end)}`,
+      `var(--pose-caution-fill) ${percent(end)}`
+    );
+  }
+  stops.push('var(--pose-caution-fill) 100%');
+  const track = `linear-gradient(to right, ${stops.join(', ')})`;
+  if (input.style.getPropertyValue('--pose-track') !== track) input.style.setProperty('--pose-track', track);
 }
 
 function setValue(input: HTMLInputElement, value: number): void {

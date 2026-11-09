@@ -1,4 +1,5 @@
 import { add, cross, dot, mulMatVec, rad, scale, Vec3 } from '../core/math';
+import { FOOTPLATE_THICKNESS, roundFootOutline } from './footplate';
 import { rotationMatrix } from '../core/mechanism';
 import { WorkbenchState } from '../state/model';
 
@@ -16,14 +17,14 @@ const top = 'var(--part-top, #eef4f8)';
 const side = 'var(--part-side, #afc4d6)';
 const origin: Vec3 = [0, 0, 0];
 
-function polygon(points: Vec3[], fill: string): string {
-  return `<polygon points="${points.map(coord).join(' ')}" fill="${fill}"/>`;
+function polygon(points: Vec3[], fill: string, stroke = 'currentColor'): string {
+  return `<polygon points="${points.map(coord).join(' ')}" fill="${fill}" stroke="${stroke}"/>`;
 }
 
-function solid(base: Vec3[], cap: Vec3[]): string {
+function solid(base: Vec3[], cap: Vec3[], smooth = false): string {
   const walls = base.map((p, i) => {
     const j = (i + 1) % base.length;
-    return polygon([p, base[j], cap[j], cap[i]], i % 2 ? part : side);
+    return polygon([p, base[j], cap[j], cap[i]], smooth || i % 2 === 0 ? side : part, smooth ? side : 'currentColor');
   });
   return walls.join('') + polygon(cap, top);
 }
@@ -100,18 +101,19 @@ export class StructureView {
     const { B1, B2 } = mech.crankTips(rad(theta1Deg), rad(theta2Deg));
     const { C1, C2 } = mech.platformPoints(pitch, roll);
     const shankHeight = Math.max(A1[2], A2[2]) + 0.035;
-    const sole = mech.footOutline(load.z_sole);
+    const sole = roundFootOutline(mech.footOutline(load.z_sole));
     const platform = solid(
       sole.map((p) => mulMatVec(rotation, p)),
-      sole.map(([x, y, z]) => mulMatVec(rotation, [x, y, z + 0.012]))
+      sole.map(([x, y, z]) => mulMatVec(rotation, [x, y, z + FOOTPLATE_THICKNESS])),
+      true
     );
     const crossbar = link(C1, C2, 7, side) + link(
       mulMatVec(rotation, [C1_P[0], 0, C1_P[2]]),
-      mulMatVec(rotation, [C1_P[0], 0, load.z_sole + 0.012]),
+      mulMatVec(rotation, [C1_P[0], 0, load.z_sole + FOOTPLATE_THICKNESS]),
       8, part
     );
     const shank = box([-0.014, -0.014, 0.013], 0.028, 0.028, shankHeight - 0.013);
-    const lowerYoke = link(origin, mulMatVec(rotation, [0, 0, load.z_sole + 0.012]), 9, side);
+    const lowerYoke = link(origin, mulMatVec(rotation, [0, 0, load.z_sole + FOOTPLATE_THICKNESS]), 9, side);
     const universal = link([0, -0.018, 0], [0, 0.018, 0], 5, part) +
       link(mulMatVec(rotation, [-0.015, 0, 0]), mulMatVec(rotation, [0.015, 0, 0]), 5, top) +
       pin(origin, 4, side);
@@ -138,9 +140,9 @@ export class StructureView {
     this.art.innerHTML = `<g stroke="currentColor" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
       <ellipse cx="154" cy="213" rx="75" ry="9" fill="currentColor" opacity=".06" stroke="none"/>
       ${platform}${lowerYoke}${crossbar}
-      ${chain(A1, B1, C1, u1, v1, w1, 1, 'var(--chain-1, #8cbad8)')}
+      ${chain(A1, B1, C1, u1, v1, w1, 1, 'color-mix(in srgb, var(--chain-1) 55%, white)')}
       ${shank}${universal}
-      ${chain(A2, B2, C2, u2, v2, w2, -1, 'var(--chain-2, #e2a17b)')}
+      ${chain(A2, B2, C2, u2, v2, w2, -1, 'color-mix(in srgb, var(--chain-2) 55%, white)')}
       ${axisLine(A1, u1, 1)}${axisLine(A2, u2, -1)}
       <g font-family="ui-monospace, monospace" font-size="11" font-weight="600">
         ${tag(A1, 'A₁', 49, labelY)}

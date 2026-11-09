@@ -7,7 +7,7 @@ import {
   MechanismParams,
   Statics
 } from '../core/mechanism';
-import { computeCurves, CurveSeries, reachablePitchRange } from '../core/curves';
+import { computeCurves, CurveSeries } from '../core/curves';
 import { classify, PoseLevel } from '../core/assessment';
 import { clamp, deg, rad } from '../core/math';
 import { Store } from './store';
@@ -51,6 +51,7 @@ export interface WorkbenchState {
   neutralTheta2Deg: number;
   inputMode: InputMode;
   angleMode: AngleMode;
+  showJointLabels: boolean;
   showFrames: boolean;
   showMotorAxes: boolean;
   walking: boolean;
@@ -61,7 +62,6 @@ export interface WorkbenchState {
   reachable: boolean;
   fkResidual: number | null;
   fkConverged: boolean;
-  reach: { min: number; max: number } | null;
   curves: CurveSeries;
 }
 
@@ -78,6 +78,7 @@ const initialState = (): WorkbenchState => ({
   neutralTheta2Deg: 0,
   inputMode: 'ik',
   angleMode: 'abs',
+  showJointLabels: true,
   showFrames: true,
   showMotorAxes: true,
   walking: false,
@@ -88,7 +89,6 @@ const initialState = (): WorkbenchState => ({
   reachable: true,
   fkResidual: null,
   fkConverged: true,
-  reach: null,
   curves: {
     theta1: [],
     theta2: [],
@@ -133,6 +133,43 @@ export class Workbench {
       walking: false
     });
     this.recompute();
+  }
+
+  /** Keep pointer-driven motion on the first reachable segment from the current pose. */
+  setPadPose(pitchDeg: number, rollDeg: number): void {
+    const { mech, pitchDeg: startPitch, rollDeg: startRoll, reachable } = this.state;
+    if (!reachable) {
+      this.setPose(pitchDeg, rollDeg);
+      return;
+    }
+
+    const dp = pitchDeg - startPitch;
+    const dr = rollDeg - startRoll;
+    const steps = Math.max(1, Math.ceil(Math.hypot(dp, dr) / 0.5));
+    const canAssemble = (t: number): boolean =>
+      mech.solveIK(rad(startPitch + dp * t), rad(startRoll + dr * t)).ok;
+
+    let last = 0;
+    for (let i = 1; i <= steps; i++) {
+      const next = i / steps;
+      if (canAssemble(next)) {
+        last = next;
+        continue;
+      }
+      let outside = next;
+      for (let j = 0; j < 10; j++) {
+        const mid = (last + outside) / 2;
+        if (canAssemble(mid)) last = mid;
+        else outside = mid;
+      }
+      break;
+    }
+
+    const pitch = startPitch + dp * last;
+    const roll = startRoll + dr * last;
+    if (Math.hypot(pitch - startPitch, roll - startRoll) > 1e-4 || this.state.inputMode !== 'ik' || this.state.walking) {
+      this.setPose(pitch, roll);
+    }
   }
 
   /** Single update for gait playback: pose and ground reaction force together. */
@@ -193,6 +230,10 @@ export class Workbench {
 
   setWalking(walking: boolean): void {
     this.store.update({ walking });
+  }
+
+  toggleJointLabels(): void {
+    this.store.update({ showJointLabels: !this.state.showJointLabels });
   }
 
   toggleFrames(): void {
@@ -272,7 +313,6 @@ export class Workbench {
       reachable,
       fkResidual,
       fkConverged,
-      reach: reachablePitchRange(this.mech, rad(rollDeg)),
       curves
     });
   }

@@ -79,16 +79,3 @@ export function computeCurves(mech: AnkleMechanism, options: CurveOptions): Curv
 
   return series;
 }
-
-/** Pitch range with at least one valid inverse-kinematics solution. */
-export function reachablePitchRange(mech: AnkleMechanism, roll: number): { min: number; max: number } | null {
-  let min = Infinity;
-  let max = -Infinity;
-  for (let pitchDeg = -40; pitchDeg <= 45; pitchDeg += 0.5) {
-    if (mech.solveIK(pitchDeg * DEG, roll).ok) {
-      min = Math.min(min, pitchDeg);
-      max = Math.max(max, pitchDeg);
-    }
-  }
-  return Number.isFinite(min) ? { min, max } : null;
-}
