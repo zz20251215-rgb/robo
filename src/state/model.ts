@@ -24,9 +24,9 @@ export interface CameraPose {
 
 export const VIEW_PRESETS: Record<ViewPreset, CameraPose> = {
   iso: { yaw: -0.75, pitch: 0.35, dist: 0.58 },
-  side: { yaw: -Math.PI / 2, pitch: 0.05, dist: 0.55 },
-  front: { yaw: 0, pitch: 0.05, dist: 0.55 },
-  top: { yaw: -0.0001, pitch: Math.PI / 2 - 0.02, dist: 0.6 }
+  side: { yaw: -Math.PI / 2, pitch: 0, dist: 0.55 },
+  front: { yaw: 0, pitch: 0, dist: 0.55 },
+  top: { yaw: 0, pitch: Math.PI / 2 - 1e-4, dist: 0.6 }
 };
 
 export const POSE_LIMITS = {
@@ -47,6 +47,8 @@ export interface WorkbenchState {
   theta1Deg: number;
   theta2Deg: number;
   neutralThetaDeg: number;
+  neutralTheta1Deg: number;
+  neutralTheta2Deg: number;
   inputMode: InputMode;
   angleMode: AngleMode;
   showFrames: boolean;
@@ -72,6 +74,8 @@ const initialState = (): WorkbenchState => ({
   theta1Deg: 0,
   theta2Deg: 0,
   neutralThetaDeg: 0,
+  neutralTheta1Deg: 0,
+  neutralTheta2Deg: 0,
   inputMode: 'ik',
   angleMode: 'abs',
   showFrames: true,
@@ -260,6 +264,8 @@ export class Workbench {
       theta1Deg: deg(theta1),
       theta2Deg: deg(theta2),
       neutralThetaDeg: deg(neutral.theta1),
+      neutralTheta1Deg: deg(neutral.theta1),
+      neutralTheta2Deg: deg(neutral.theta2),
       ik,
       statics,
       level: classify(statics),

@@ -19,17 +19,31 @@ export interface MechanismParams {
   w_base: number;
   h_base: number;
   x_base: number;
-  l_crank: number;
-  l_rod: number;
+  h_base1?: number;
+  h_base2?: number;
+  l_crank1: number;
+  l_rod1: number;
+  l_crank2: number;
+  l_rod2: number;
   w_foot: number;
   x_foot: number;
   z_foot: number;
+  /** Legacy alias for symmetric crank length. */
+  l_crank?: number;
+  /** Legacy alias for symmetric connecting rod length. */
+  l_rod?: number;
 }
 
 export const DEFAULT_PARAMS: MechanismParams = {
   w_base: 0.07,
   h_base: 0.18,
+  h_base1: 0.18,
+  h_base2: 0.18,
   x_base: -0.04,
+  l_crank1: 0.045,
+  l_rod1: 0.165,
+  l_crank2: 0.045,
+  l_rod2: 0.165,
   l_crank: 0.045,
   l_rod: 0.165,
   w_foot: 0.06,
@@ -133,8 +147,10 @@ export interface StaticsSingular extends StaticsFrame {
 export type Statics = StaticsOk | StaticsSingular;
 
 function deriveGeometry(p: MechanismParams): MechanismGeometry {
-  const A1: Vec3 = [p.x_base, p.w_base / 2, p.h_base];
-  const A2: Vec3 = [p.x_base, -p.w_base / 2, p.h_base];
+  const h1 = p.h_base1 ?? p.h_base ?? 0.18;
+  const h2 = p.h_base2 ?? p.h_base ?? 0.18;
+  const A1: Vec3 = [p.x_base, p.w_base / 2, h1];
+  const A2: Vec3 = [p.x_base, -p.w_base / 2, h2];
   const u1: Vec3 = [0, 1, 0];
   const u2: Vec3 = [0, 1, 0];
   const v1: Vec3 = [0, 0, -1];
@@ -210,7 +226,23 @@ export class AnkleMechanism {
   }
 
   setParams(patch: Partial<MechanismParams>): void {
-    this.params = { ...this.params, ...patch };
+    const updated = { ...this.params, ...patch };
+    if (patch.l_crank !== undefined) {
+      if (patch.l_crank1 === undefined) updated.l_crank1 = patch.l_crank;
+      if (patch.l_crank2 === undefined) updated.l_crank2 = patch.l_crank;
+    }
+    if (patch.l_rod !== undefined) {
+      if (patch.l_rod1 === undefined) updated.l_rod1 = patch.l_rod;
+      if (patch.l_rod2 === undefined) updated.l_rod2 = patch.l_rod;
+    }
+    if (patch.h_base !== undefined) {
+      if (patch.h_base1 === undefined) updated.h_base1 = patch.h_base;
+      if (patch.h_base2 === undefined) updated.h_base2 = patch.h_base;
+    }
+    updated.l_crank = updated.l_crank1;
+    updated.l_rod = updated.l_rod1;
+    if (updated.h_base1 !== undefined) updated.h_base = updated.h_base1;
+    this.params = updated;
     this.geometry = deriveGeometry(this.params);
   }
 
@@ -223,10 +255,15 @@ export class AnkleMechanism {
   }
 
   crankTips(theta1: number, theta2: number): { B1: Vec3; B2: Vec3 } {
-    const { A1, A2, u1, u2, v1, v2, w1, w2 } = this.geometry;
-    const tip = (A: Vec3, v: Vec3, w: Vec3, theta: number): Vec3 =>
-      add(A, add(scale(v, this.params.l_crank * Math.cos(theta)), scale(w, this.params.l_crank * Math.sin(theta))));
-    return { B1: tip(A1, v1, w1, theta1), B2: tip(A2, v2, w2, theta2) };
+    const { A1, A2, v1, v2, w1, w2 } = this.geometry;
+    const lCrank1 = this.params.l_crank1 ?? this.params.l_crank ?? 0.045;
+    const lCrank2 = this.params.l_crank2 ?? this.params.l_crank ?? 0.045;
+    const tip = (A: Vec3, v: Vec3, w: Vec3, theta: number, lCrank: number): Vec3 =>
+      add(A, add(scale(v, lCrank * Math.cos(theta)), scale(w, lCrank * Math.sin(theta))));
+    return {
+      B1: tip(A1, v1, w1, theta1, lCrank1),
+      B2: tip(A2, v2, w2, theta2, lCrank2)
+    };
   }
 
   /** Foot sole outline in platform coordinates. */
@@ -245,8 +282,13 @@ export class AnkleMechanism {
     const { C1, C2 } = this.platformPoints(pitch, roll);
     const { A1, A2, v1, v2, w1, w2 } = this.geometry;
     const p = this.params;
-    const r1 = solveChainIK(C1, A1, v1, w1, p.l_crank, p.l_rod);
-    const r2 = solveChainIK(C2, A2, v2, w2, p.l_crank, p.l_rod);
+    const lCrank1 = p.l_crank1 ?? p.l_crank ?? 0.045;
+    const lCrank2 = p.l_crank2 ?? p.l_crank ?? 0.045;
+    const lRod1 = p.l_rod1 ?? p.l_rod ?? 0.165;
+    const lRod2 = p.l_rod2 ?? p.l_rod ?? 0.165;
+
+    const r1 = solveChainIK(C1, A1, v1, w1, lCrank1, lRod1);
+    const r2 = solveChainIK(C2, A2, v2, w2, lCrank2, lRod2);
 
     if (r1.ok && r2.ok) {
       return { ok: true, theta1: r1.theta, theta2: r2.theta, disc1: r1.disc, disc2: r2.disc };
@@ -261,7 +303,10 @@ export class AnkleMechanism {
    */
   solveFK(theta1: number, theta2: number, guessPitch = 0, guessRoll = 0): FKResult {
     const { B1, B2 } = this.crankTips(theta1, theta2);
-    const lRodSq = this.params.l_rod * this.params.l_rod;
+    const lRod1 = this.params.l_rod1 ?? this.params.l_rod ?? 0.165;
+    const lRod2 = this.params.l_rod2 ?? this.params.l_rod ?? 0.165;
+    const lRod1Sq = lRod1 * lRod1;
+    const lRod2Sq = lRod2 * lRod2;
     let pitch = guessPitch;
     let roll = guessRoll;
     let iterations = 0;
@@ -270,8 +315,8 @@ export class AnkleMechanism {
     for (let i = 0; i < 24; i++) {
       iterations = i + 1;
       const { C1, C2 } = this.platformPoints(pitch, roll);
-      const f1 = dot(sub(C1, B1), sub(C1, B1)) - lRodSq;
-      const f2 = dot(sub(C2, B2), sub(C2, B2)) - lRodSq;
+      const f1 = dot(sub(C1, B1), sub(C1, B1)) - lRod1Sq;
+      const f2 = dot(sub(C2, B2), sub(C2, B2)) - lRod2Sq;
       residual = Math.max(Math.abs(f1), Math.abs(f2));
       if (residual < 1e-10) return { ok: true, pitch, roll, residual, iterations };
 

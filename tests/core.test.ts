@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import reference from './fixtures/legacy-reference.json';
-import { AnkleMechanism, DEFAULT_LOAD } from '../src/core/mechanism';
+import { AnkleMechanism, DEFAULT_LOAD, DEFAULT_PARAMS } from '../src/core/mechanism';
 import { computeCurves } from '../src/core/curves';
 
 const DEG = Math.PI / 180;
@@ -72,5 +72,62 @@ describe('numerical parity with the pre-refactor model', () => {
         expect(cond.value as number).toBeCloseTo(expected.cond as number, 7);
       }
     });
+  });
+
+  it('supports independent link dimensions for each branch', () => {
+    const asymMech = new AnkleMechanism({
+      ...mech.params,
+      l_crank1: 0.045,
+      l_crank2: 0.042,
+      l_rod1: 0.165,
+      l_rod2: 0.162
+    });
+
+    const neutral = asymMech.neutralAngles();
+    expect(neutral.theta1).not.toBeCloseTo(neutral.theta2, 2);
+
+    const ik = asymMech.solveIK(0, 0);
+    expect(ik.ok).toBe(true);
+    if (!ik.ok) return;
+    expect(ik.theta1).not.toBeCloseTo(ik.theta2, 2);
+
+    // Forward kinematics round-trip with asymmetric limbs
+    const fk = asymMech.solveFK(ik.theta1, ik.theta2, 0, 0);
+    expect(fk.ok).toBe(true);
+    expect(fk.pitch / DEG).toBeCloseTo(0, 4);
+    expect(fk.roll / DEG).toBeCloseTo(0, 4);
+
+    // Statics evaluation
+    const st = asymMech.statics(0, 0, ik.theta1, ik.theta2, DEFAULT_LOAD);
+    expect(st.kind).toBe('ok');
+    if (st.kind === 'ok') {
+      expect(st.mu1Deg).toBeGreaterThan(0);
+      expect(st.mu2Deg).toBeGreaterThan(0);
+      expect(st.fRod1).not.toBeCloseTo(st.fRod2, 0);
+    }
+  });
+
+  it('supports independent motor heights for each branch', () => {
+    const diffHeightMech = new AnkleMechanism({
+      ...DEFAULT_PARAMS,
+      h_base1: 0.185,
+      h_base2: 0.175
+    });
+
+    expect(diffHeightMech.geometry.A1[2]).toBeCloseTo(0.185, 6);
+    expect(diffHeightMech.geometry.A2[2]).toBeCloseTo(0.175, 6);
+
+    const neutral = diffHeightMech.neutralAngles();
+    expect(neutral.theta1).not.toBeCloseTo(neutral.theta2, 2);
+
+    const ik = diffHeightMech.solveIK(0, 0);
+    expect(ik.ok).toBe(true);
+    if (!ik.ok) return;
+    expect(ik.theta1).not.toBeCloseTo(ik.theta2, 2);
+
+    const fk = diffHeightMech.solveFK(ik.theta1, ik.theta2, 0, 0);
+    expect(fk.ok).toBe(true);
+    expect(fk.pitch / DEG).toBeCloseTo(0, 4);
+    expect(fk.roll / DEG).toBeCloseTo(0, 4);
   });
 });

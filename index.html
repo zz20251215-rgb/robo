@@ -40,6 +40,245 @@
       <section class="stage card">
         <div class="stage-view">
           <canvas id="scene" aria-label="2-RSS+1-U 机构三维视图"></canvas>
+
+          <div class="stage-dock card" id="stage-params">
+            <div class="dock-header" id="stage-params-toggle" role="button" tabindex="0" aria-expanded="true" title="展开/收起机构尺寸">
+              <h2>机构尺寸</h2>
+              <span class="hint">mm</span>
+              <i class="dock-chevron"></i>
+            </div>
+            <div class="dock-pager">
+              <div class="segmented wide dock-tabs" role="tablist" aria-label="机构尺寸分页">
+                <button type="button" class="dock-tab-btn" data-param-tab="all" aria-pressed="true" title="查看全部机构尺寸">全部</button>
+                <button type="button" class="dock-tab-btn" data-param-tab="chain1" aria-pressed="false" title="支链 1 (左侧电机)">支链 1</button>
+                <button type="button" class="dock-tab-btn" data-param-tab="chain2" aria-pressed="false" title="支链 2 (右侧电机)">支链 2</button>
+                <button type="button" class="dock-tab-btn" data-param-tab="base" aria-pressed="false" title="机架与足端几何">机架几何</button>
+              </div>
+              <div class="dock-page-nav">
+                <button type="button" class="btn-page-nav" id="btn-param-prev" title="翻到上一页" aria-label="上一页">
+                  <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><path d="M10.5 3.5L6 8l4.5 4.5-.7.7L5 8l4.8-5.2.7.7z"/></svg>
+                  <span>上一页</span>
+                </button>
+                <span class="dock-page-badge" id="param-page-badge">全部 (可上下滚动)</span>
+                <button type="button" class="btn-page-nav" id="btn-param-next" title="翻到下一页" aria-label="下一页">
+                  <span>下一页</span>
+                  <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor"><path d="M5.5 3.5L10 8l-4.5 4.5.7.7L11 8 6.2 2.8l-.7.7z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="card-body params" id="stage-params-body">
+              <div class="sync-row">
+                <label class="checkbox-label" for="sync-chains">
+                  <input type="checkbox" id="sync-chains" checked />
+                  <span>双链尺寸对称联动</span>
+                </label>
+              </div>
+
+              <div class="param-section" data-tab-section="chain1">
+                <div class="branch-tag branch-1">
+                  <i class="dot dot-motor1"></i>
+                  <span>支链 1 (左侧电机)</span>
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-lcrank1">曲柄长 l₁</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-lcrank1" data-param-num="l_crank1" min="25" max="80" step="0.5" value="45" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-lcrank1" data-param="l_crank1" min="25" max="80" step="0.5" value="45" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-lrod1">连杆长 l_r1</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-lrod1" data-param-num="l_rod1" min="100" max="260" step="0.5" value="165" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-lrod1" data-param="l_rod1" min="100" max="260" step="0.5" value="165" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-hbase1">电机高度 h₁</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-hbase1" data-param-num="h_base1" min="110" max="280" step="1" value="180" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-hbase1" data-param="h_base1" min="110" max="280" step="1" value="180" />
+                </div>
+              </div>
+
+              <div class="param-section" data-tab-section="chain2">
+                <div class="branch-tag branch-2">
+                  <i class="dot dot-motor2"></i>
+                  <span>支链 2 (右侧电机)</span>
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-lcrank2">曲柄长 l₂</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-lcrank2" data-param-num="l_crank2" min="25" max="80" step="0.5" value="45" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-lcrank2" data-param="l_crank2" min="25" max="80" step="0.5" value="45" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-lrod2">连杆长 l_r2</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-lrod2" data-param-num="l_rod2" min="100" max="260" step="0.5" value="165" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-lrod2" data-param="l_rod2" min="100" max="260" step="0.5" value="165" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-hbase2">电机高度 h₂</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-hbase2" data-param-num="h_base2" min="110" max="280" step="1" value="180" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-hbase2" data-param="h_base2" min="110" max="280" step="1" value="180" />
+                </div>
+              </div>
+
+              <div class="param-section" data-tab-section="base">
+                <div class="branch-tag assembly-tag">
+                  <span>机架与足端几何</span>
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-wbase">基座半宽</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-wbase" data-param-num="w_base" min="40" max="130" step="1" value="70" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-wbase" data-param="w_base" min="40" max="130" step="1" value="70" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-xbase">基座前后</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-xbase" data-param-num="x_base" min="-80" max="20" step="1" value="-40" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-xbase" data-param="x_base" min="-80" max="20" step="1" value="-40" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-wfoot">足端半宽</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-wfoot" data-param-num="w_foot" min="30" max="110" step="1" value="60" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-wfoot" data-param="w_foot" min="30" max="110" step="1" value="60" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-xfoot">足端前后</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-xfoot" data-param-num="x_foot" min="-70" max="20" step="1" value="-30" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-xfoot" data-param="x_foot" min="-70" max="20" step="1" value="-30" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="param-zfoot">足端高度</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-param-zfoot" data-param-num="z_foot" min="-50" max="10" step="1" value="-20" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="param-zfoot" data-param="z_foot" min="-50" max="10" step="1" value="-20" />
+                </div>
+              </div>
+            </div>
+            <div class="card-actions dock-actions">
+              <div class="preset-group">
+                <span class="preset-label">预设:</span>
+                <button type="button" class="btn-preset" data-preset="standard" title="应用标准设计尺寸">标准</button>
+                <button type="button" class="btn-preset" data-preset="torque" title="增大曲柄与电机高度，增强输出力矩">大扭矩</button>
+                <button type="button" class="btn-preset" data-preset="speed" title="减小曲柄长度，提升响应速度">高速</button>
+              </div>
+              <button class="btn tiny ghost" id="btn-reset-params" title="重置为默认几何尺寸">恢复默认</button>
+            </div>
+          </div>
+
+          <div class="stage-dock-right">
+            <details class="card diag" id="diagnostics" data-level="healthy" open>
+              <summary>
+                <h2>位形诊断</h2>
+                <span class="hint mono" id="diag-meta"></span>
+              </summary>
+              <div class="card-body">
+                <p class="diag-title" id="diag-title">—</p>
+                <p class="diag-advice" id="diag-advice"></p>
+                <dl class="diag-grid" id="diag-details"></dl>
+                <p class="diag-rod mono" id="rod-lengths"></p>
+              </div>
+            </details>
+
+            <details class="card" id="stage-loads" open>
+              <summary>
+                <h2>载荷与压力中心</h2>
+                <span class="hint">N · mm</span>
+              </summary>
+              <div class="card-body params">
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="load-fz">垂直力 Fz</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-load-fz" data-load-num="Fz" min="0" max="1000" step="5" value="500" class="input-num" />
+                      <span class="unit">N</span>
+                    </div>
+                  </div>
+                  <input type="range" id="load-fz" data-load="Fz" min="0" max="1000" step="5" value="500" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="load-fx">前后力 Fx</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-load-fx" data-load-num="Fx" min="-200" max="200" step="5" value="0" class="input-num" />
+                      <span class="unit">N</span>
+                    </div>
+                  </div>
+                  <input type="range" id="load-fx" data-load="Fx" min="-200" max="200" step="5" value="0" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="load-copx">CoP 前后</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-load-copx" data-load-num="x_cop" data-scale="1000" min="-60" max="140" step="1" value="80" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="load-copx" data-load="x_cop" data-scale="1000" min="-60" max="140" step="5" value="80" />
+                </div>
+                <div class="field compact">
+                  <div class="field-header">
+                    <label for="load-copy">CoP 左右</label>
+                    <div class="num-wrap">
+                      <input type="number" id="num-load-copy" data-load-num="y_cop" data-scale="1000" min="-30" max="30" step="1" value="0" class="input-num" />
+                      <span class="unit">mm</span>
+                    </div>
+                  </div>
+                  <input type="range" id="load-copy" data-load="y_cop" data-scale="1000" min="-30" max="30" step="5" value="0" />
+                </div>
+              </div>
+            </details>
+          </div>
+
           <div class="stage-top">
             <div class="segmented" role="group" aria-label="视点">
               <button data-view="iso" aria-pressed="true">轴测</button>
@@ -48,20 +287,23 @@
               <button data-view="top" aria-pressed="false">俯视</button>
             </div>
             <div class="stage-toggles">
+              <button class="chip" id="btn-toggle-params" aria-pressed="true" title="展开/收起机构尺寸面板">机构尺寸</button>
               <button class="chip" id="btn-toggle-frames" aria-pressed="true">坐标系</button>
               <button class="chip" id="btn-toggle-motor-axes" aria-pressed="true">电机轴</button>
             </div>
           </div>
-          <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
-          <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
+          <div class="stage-bottom">
+            <div class="stage-readout" id="pose-readout">Pitch +0.0° Roll +0.0°</div>
+            <div class="stage-hint">拖拽旋转 · 滚轮缩放</div>
+          </div>
         </div>
         <div class="metrics">
           <div class="metric">
-            <span class="metric-label">θ₁ 电机 1</span>
+            <span class="metric-label" id="m-lbl-theta1">θ₁ 电机 1</span>
             <span class="metric-value" id="m-theta1">—</span>
           </div>
           <div class="metric">
-            <span class="metric-label">θ₂ 电机 2</span>
+            <span class="metric-label" id="m-lbl-theta2">θ₂ 电机 2</span>
             <span class="metric-value" id="m-theta2">—</span>
           </div>
           <div class="metric">
@@ -84,7 +326,7 @@
       </section>
 
       <aside class="rail">
-        <section class="card">
+        <section class="card pose-card">
           <header class="card-head">
             <h2>位姿</h2>
             <span class="hint" id="fk-status"></span>
@@ -114,93 +356,41 @@
               <button data-angle="rel" aria-pressed="false">相对角</button>
             </div>
             <div class="field" id="fk-controls" hidden>
-              <label for="slider-theta1">θ₁ 电机 1<output id="out-theta1">+0.0°</output></label>
+              <label for="slider-theta1"><span id="lbl-theta1">θ₁ 电机 1</span><output id="out-theta1">+0.0°</output></label>
               <input type="range" id="slider-theta1" min="-45" max="90" step="0.1" value="31.2" />
-              <label for="slider-theta2">θ₂ 电机 2<output id="out-theta2">+0.0°</output></label>
+              <label for="slider-theta2"><span id="lbl-theta2">θ₂ 电机 2</span><output id="out-theta2">+0.0°</output></label>
               <input type="range" id="slider-theta2" min="-45" max="90" step="0.1" value="31.2" />
             </div>
+
+            <div class="pose-presets-section">
+              <span class="section-label">快速位姿预设</span>
+              <div class="pose-preset-chips">
+                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="0">中立 0°</button>
+                <button type="button" class="chip-preset" data-pose-p="15" data-pose-r="0">背屈 +15°</button>
+                <button type="button" class="chip-preset" data-pose-p="-15" data-pose-r="0">跖屈 -15°</button>
+                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="10">外翻 +10°</button>
+                <button type="button" class="chip-preset" data-pose-p="0" data-pose-r="-10">内翻 -10°</button>
+              </div>
+            </div>
+
+            <div class="kin-guide">
+              <div class="kin-guide-title">
+                <i class="kin-dot"></i>
+                <span>运动耦合规律</span>
+              </div>
+              <div class="kin-guide-grid">
+                <div><span class="guide-tag tag-cyan">同向转动</span>θ₁↑, θ₂↑ ➔ 俯仰背屈</div>
+                <div><span class="guide-tag tag-amber">同向转动</span>θ₁↓, θ₂↓ ➔ 俯仰跖屈</div>
+                <div><span class="guide-tag tag-purple">差动转动</span>θ₁↑, θ₂↓ ➔ 横滚外翻</div>
+                <div><span class="guide-tag tag-green">速度比</span><span class="mono" id="disp-trans-ratio">dθ/dPitch ≈ 1.09</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions pose-actions">
+            <span class="pose-tip">支持触控盘拖拽或滑块微调</span>
+            <button class="btn tiny ghost" id="btn-reset-pose-card">复位姿态</button>
           </div>
         </section>
-
-        <section class="card diag" id="diagnostics" data-level="healthy">
-          <header class="card-head">
-            <h2>位形诊断</h2>
-            <span class="hint mono" id="diag-meta"></span>
-          </header>
-          <p class="diag-title" id="diag-title">—</p>
-          <p class="diag-advice" id="diag-advice"></p>
-          <dl class="diag-grid" id="diag-details"></dl>
-          <p class="diag-rod mono" id="rod-lengths"></p>
-        </section>
-
-        <details class="card" open>
-          <summary>
-            <h2>机构尺寸</h2>
-            <span class="hint">mm</span>
-          </summary>
-          <div class="card-body params">
-            <div class="field compact">
-              <label for="param-wbase">基座半宽<output data-param-value="w_base">70</output></label>
-              <input type="range" id="param-wbase" data-param="w_base" min="40" max="130" step="1" value="70" />
-            </div>
-            <div class="field compact">
-              <label for="param-hbase">电机高度<output data-param-value="h_base">180</output></label>
-              <input type="range" id="param-hbase" data-param="h_base" min="110" max="280" step="1" value="180" />
-            </div>
-            <div class="field compact">
-              <label for="param-xbase">基座前后<output data-param-value="x_base">-40</output></label>
-              <input type="range" id="param-xbase" data-param="x_base" min="-80" max="20" step="1" value="-40" />
-            </div>
-            <div class="field compact">
-              <label for="param-lcrank">曲柄长度<output data-param-value="l_crank">45</output></label>
-              <input type="range" id="param-lcrank" data-param="l_crank" min="25" max="80" step="1" value="45" />
-            </div>
-            <div class="field compact">
-              <label for="param-lrod">连杆长度<output data-param-value="l_rod">165</output></label>
-              <input type="range" id="param-lrod" data-param="l_rod" min="100" max="260" step="1" value="165" />
-            </div>
-            <div class="field compact">
-              <label for="param-wfoot">足端半宽<output data-param-value="w_foot">60</output></label>
-              <input type="range" id="param-wfoot" data-param="w_foot" min="30" max="110" step="1" value="60" />
-            </div>
-            <div class="field compact">
-              <label for="param-xfoot">足端前后<output data-param-value="x_foot">-30</output></label>
-              <input type="range" id="param-xfoot" data-param="x_foot" min="-70" max="20" step="1" value="-30" />
-            </div>
-            <div class="field compact">
-              <label for="param-zfoot">足端高度<output data-param-value="z_foot">-20</output></label>
-              <input type="range" id="param-zfoot" data-param="z_foot" min="-50" max="10" step="1" value="-20" />
-            </div>
-          </div>
-          <div class="card-actions">
-            <button class="btn tiny ghost" id="btn-reset-params">恢复默认</button>
-          </div>
-        </details>
-
-        <details class="card">
-          <summary>
-            <h2>载荷与压力中心</h2>
-            <span class="hint">N · mm</span>
-          </summary>
-          <div class="card-body params">
-            <div class="field compact">
-              <label for="load-fz">垂直力 Fz<output data-load-value="Fz">500</output></label>
-              <input type="range" id="load-fz" data-load="Fz" min="0" max="1000" step="5" value="500" />
-            </div>
-            <div class="field compact">
-              <label for="load-fx">前后力 Fx<output data-load-value="Fx">0</output></label>
-              <input type="range" id="load-fx" data-load="Fx" min="-200" max="200" step="5" value="0" />
-            </div>
-            <div class="field compact">
-              <label for="load-copx">CoP 前后<output data-load-value="x_cop">80</output></label>
-              <input type="range" id="load-copx" data-load="x_cop" data-scale="1000" min="-60" max="140" step="5" value="80" />
-            </div>
-            <div class="field compact">
-              <label for="load-copy">CoP 左右<output data-load-value="y_cop">0</output></label>
-              <input type="range" id="load-copy" data-load="y_cop" data-scale="1000" min="-30" max="30" step="5" value="0" />
-            </div>
-          </div>
-        </details>
       </aside>
     </main>
 

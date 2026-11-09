@@ -63,10 +63,11 @@ function levelCopy(state: WorkbenchState): { title: string; advice: string } {
 export function renderReadouts(state: WorkbenchState): void {
   const statics = state.statics;
   const okStatics = statics && statics.kind === 'ok' ? statics : null;
-  const thetaOffset = state.angleMode === 'rel' ? state.neutralThetaDeg : 0;
+  const offset1 = state.angleMode === 'rel' ? (state.neutralTheta1Deg ?? state.neutralThetaDeg) : 0;
+  const offset2 = state.angleMode === 'rel' ? (state.neutralTheta2Deg ?? state.neutralThetaDeg) : 0;
 
-  $('m-theta1').textContent = `${signed(state.theta1Deg - thetaOffset)}°`;
-  $('m-theta2').textContent = `${signed(state.theta2Deg - thetaOffset)}°`;
+  $('m-theta1').textContent = `${signed(state.theta1Deg - offset1)}°`;
+  $('m-theta2').textContent = `${signed(state.theta2Deg - offset2)}°`;
   $('m-tau1').textContent = okStatics ? `${signed(okStatics.tauM1)} Nm` : '—';
   $('m-tau2').textContent = okStatics ? `${signed(okStatics.tauM2)} Nm` : '—';
   const mu = statics ? Math.min(statics.mu1Deg, statics.mu2Deg) : null;
@@ -82,8 +83,28 @@ export function renderReadouts(state: WorkbenchState): void {
   $('pose-readout').textContent = `Pitch ${signed(state.pitchDeg)}°   Roll ${signed(state.rollDeg)}°`;
   $('out-pitch').textContent = `${signed(state.pitchDeg)}°`;
   $('out-roll').textContent = `${signed(state.rollDeg)}°`;
-  $('out-theta1').textContent = `${signed(state.theta1Deg)}°`;
-  $('out-theta2').textContent = `${signed(state.theta2Deg)}°`;
+  $('out-theta1').textContent = `${signed(state.theta1Deg - offset1)}°`;
+  $('out-theta2').textContent = `${signed(state.theta2Deg - offset2)}°`;
+  const lbl1 = document.getElementById('lbl-theta1');
+  const lbl2 = document.getElementById('lbl-theta2');
+  if (lbl1) lbl1.textContent = state.angleMode === 'rel' ? 'Δθ₁ 电机 1 (相对)' : 'θ₁ 电机 1 (绝对)';
+  if (lbl2) lbl2.textContent = state.angleMode === 'rel' ? 'Δθ₂ 电机 2 (相对)' : 'θ₂ 电机 2 (绝对)';
+
+  const mLbl1 = document.getElementById('m-lbl-theta1');
+  const mLbl2 = document.getElementById('m-lbl-theta2');
+  if (mLbl1) mLbl1.textContent = state.angleMode === 'rel' ? 'Δθ₁ 电机 1' : 'θ₁ 电机 1';
+  if (mLbl2) mLbl2.textContent = state.angleMode === 'rel' ? 'Δθ₂ 电机 2' : 'θ₂ 电机 2';
+
+  const ratioEl = document.getElementById('disp-trans-ratio');
+  if (ratioEl) {
+    if (okStatics) {
+      const avgLever = (okStatics.lever1 + okStatics.lever2) / 2;
+      const ratio = avgLever > 0 ? (0.045 / avgLever).toFixed(2) : '1.09';
+      ratioEl.textContent = `dθ/dPitch ≈ ${ratio}`;
+    } else {
+      ratioEl.textContent = 'dθ/dPitch ≈ 1.09';
+    }
+  }
 
   $('fk-status').textContent =
     state.inputMode === 'fk'
@@ -116,9 +137,12 @@ export function renderReadouts(state: WorkbenchState): void {
 
   const len1 = statics ? statics.rod1[0] ** 2 + statics.rod1[1] ** 2 + statics.rod1[2] ** 2 : null;
   const len2 = statics ? statics.rod2[0] ** 2 + statics.rod2[1] ** 2 + statics.rod2[2] ** 2 : null;
+  const des1 = ((state.params.l_rod1 ?? state.params.l_rod ?? 0.165) * 1000).toFixed(1);
+  const des2 = ((state.params.l_rod2 ?? state.params.l_rod ?? 0.165) * 1000).toFixed(1);
+  const desLabel = des1 === des2 ? `${des1} mm` : `${des1} / ${des2} mm`;
   $('rod-lengths').textContent =
     len1 !== null && len2 !== null
-      ? `连杆实长 ${(Math.sqrt(len1) * 1000).toFixed(2)} / ${(Math.sqrt(len2) * 1000).toFixed(2)} mm · 设计 ${(state.params.l_rod * 1000).toFixed(1)} mm`
+      ? `连杆实长 ${(Math.sqrt(len1) * 1000).toFixed(2)} / ${(Math.sqrt(len2) * 1000).toFixed(2)} mm · 设计 ${desLabel}`
       : '连杆实长 —';
 
   $('chart-load-caption').textContent = `Fz ${state.load.Fz.toFixed(0)} N · CoP ${(state.load.x_cop * 1000).toFixed(0)} mm · Roll ${state.rollDeg.toFixed(1)}°`;

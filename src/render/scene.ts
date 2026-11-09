@@ -42,6 +42,7 @@ export class SceneView {
   private lastY = 0;
   private frame: WorkbenchState | null = null;
   private onRender: (() => void) | null = null;
+  private isOrtho = false;
 
   constructor(canvas: HTMLCanvasElement, onRender?: () => void) {
     const ctx = canvas.getContext('2d');
@@ -57,6 +58,7 @@ export class SceneView {
   setPreset(view: ViewPreset): void {
     this.cam = { ...VIEW_PRESETS[view] };
     this.pan = { x: 0, y: view === 'top' ? 0 : -0.06 };
+    this.isOrtho = view !== 'iso';
     this.requestRender();
   }
 
@@ -97,6 +99,7 @@ export class SceneView {
       this.lastY = event.clientY;
       this.cam.yaw -= dx * 0.009;
       this.cam.pitch = Math.min(1.45, Math.max(-1.45, this.cam.pitch + dy * 0.007));
+      this.isOrtho = false;
       this.draw();
     });
     const end = (event: PointerEvent): void => {
@@ -130,7 +133,7 @@ export class SceneView {
     const z2 = y1 * sp + z1 * cp;
     const camZ = Math.max(0.08, y2 + dist);
     const fov = Math.min(this.width, this.height) * 0.78;
-    const scale = fov / camZ;
+    const scale = this.isOrtho ? fov / dist : fov / camZ;
     return {
       x: this.width / 2 + (x1 + this.pan.x) * scale,
       y: this.height / 2 - (z2 + this.pan.y) * scale,
@@ -241,34 +244,30 @@ export class SceneView {
   }
 
   private drawBase(A1: Vec3, A2: Vec3): void {
-    const h = A1[2];
-    const top: Vec3[] = [
-      [-0.105, -0.085, h + 0.02],
-      [0.025, -0.085, h + 0.02],
-      [0.025, 0.085, h + 0.02],
-      [-0.105, 0.085, h + 0.02]
-    ];
-    const ctx = this.ctx;
-    ctx.fillStyle = 'rgba(148,163,184,0.07)';
-    this.fillPath(top);
-    ctx.strokeStyle = COLOR.structureDim;
-    ctx.lineWidth = 1.2;
-    this.strokePath([...top, top[0]]);
-    this.strokePath([[top[0][0], top[0][1], h], [top[0][0], top[0][1], h + 0.02]]);
-    this.strokePath([[top[1][0], top[1][1], h], [top[1][0], top[1][1], h + 0.02]]);
-    this.strokePath([[top[2][0], top[2][1], h], [top[2][0], top[2][1], h + 0.02]]);
+    const h = Math.max(A1[2], A2[2]);
 
+    // Central pillar / shank (小腿主支撑柱)
     this.link([0, 0, h], [0, 0, 0], 'rgba(148,163,184,0.55)', 5);
     this.joint([0, 0, 0], '#94a3b8', 6);
+    this.joint([0, 0, h], '#94a3b8', 5);
+
+    // Universal joint U (虎克铰十字轴)
+    const ctx = this.ctx;
+    ctx.strokeStyle = 'rgba(148,163,184,0.7)';
+    ctx.lineWidth = 1.6;
     this.strokePath([[-0.028, 0, 0], [0.028, 0, 0]]);
     this.strokePath([[0, -0.028, 0], [0, 0.028, 0]]);
 
+    // Motor mounting brackets connecting central shank to motor stations A1 and A2
     for (const A of [A1, A2]) {
       const ctx2 = this.ctx;
       ctx2.strokeStyle = 'rgba(148,163,184,0.6)';
       ctx2.lineWidth = 1.4;
       const half = 0.026;
+      // Motor rotation pivot axis
       this.strokePath([[A[0], A[1] - half, A[2]], [A[0], A[1] + half, A[2]]]);
+      // Fixed bracket from central pillar to motor station A
+      this.strokePath([[0, 0, A[2]], [A[0], 0, A[2]], A]);
     }
   }
 
@@ -319,7 +318,11 @@ export class SceneView {
     this.strokePath([[A[0], A[1] - half, A[2]], [A[0], A[1] + half, A[2]]]);
     ctx.setLineDash([]);
 
-    const r = mech.params.l_crank * 1.42;
+    const lc =
+      color === COLOR.motor1
+        ? (mech.params.l_crank1 ?? mech.params.l_crank ?? 0.045)
+        : (mech.params.l_crank2 ?? mech.params.l_crank ?? 0.045);
+    const r = lc * 1.42;
     ctx.strokeStyle = 'rgba(148,163,184,0.3)';
     this.strokePath([A, [A[0], A[1], A[2] - r]]);
 
@@ -459,23 +462,43 @@ export class SceneView {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(148,163,184,0.85)';
-    const entries: Array<[Vec3, string]> = [
-      [A1, 'A₁'],
-      [A2, 'A₂'],
-      [C1, 'C₁'],
-      [C2, 'C₂']
-    ];
-    for (const [point, label] of entries) {
-      const p = this.project(point);
-      ctx.fillText(label, p.x + 7, p.y - 7);
+
+    const pA1 = this.project(A1);
+    const pA2 = this.project(A2);
+    if (Math.hypot(pA1.x - pA2.x, pA1.y - pA2.y) < 3) {
+      ctx.fillText('A₁/A₂', pA1.x + 7, pA1.y - 7);
+    } else {
+      ctx.fillText('A₁', pA1.x + 7, pA1.y - 7);
+      ctx.fillText('A₂', pA2.x + 7, pA2.y - 7);
     }
+
+    const pC1 = this.project(C1);
+    const pC2 = this.project(C2);
+    if (Math.hypot(pC1.x - pC2.x, pC1.y - pC2.y) < 3) {
+      ctx.fillText('C₁/C₂', pC1.x + 7, pC1.y - 7);
+    } else {
+      ctx.fillText('C₁', pC1.x + 7, pC1.y - 7);
+      ctx.fillText('C₂', pC2.x + 7, pC2.y - 7);
+    }
+
     if (state.showMotorAxes) {
       const b1 = this.project(B1);
       const b2 = this.project(B2);
-      ctx.fillStyle = 'rgba(56,189,248,0.9)';
-      ctx.fillText('B₁', b1.x + 7, b1.y + 8);
-      ctx.fillStyle = 'rgba(251,191,36,0.9)';
-      ctx.fillText('B₂', b2.x + 7, b2.y + 8);
+      if (Math.hypot(b1.x - b2.x, b1.y - b2.y) < 3) {
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('B₁', b1.x + 7, b1.y + 8);
+        const w = ctx.measureText('B₁').width;
+        ctx.fillStyle = 'rgba(148,163,184,0.85)';
+        ctx.fillText('/', b1.x + 7 + w, b1.y + 8);
+        const wSlash = ctx.measureText('/').width;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('B₂', b1.x + 7 + w + wSlash, b1.y + 8);
+      } else {
+        ctx.fillStyle = 'rgba(56,189,248,0.9)';
+        ctx.fillText('B₁', b1.x + 7, b1.y + 8);
+        ctx.fillStyle = 'rgba(251,191,36,0.9)';
+        ctx.fillText('B₂', b2.x + 7, b2.y + 8);
+      }
     }
   }
 }

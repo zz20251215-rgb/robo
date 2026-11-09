@@ -30,11 +30,17 @@ class Params:
     w_base: float = 0.070
     h_base: float = 0.180
     x_base: float = -0.040
-    l_crank: float = 0.045
-    l_rod: float = 0.165
+    h_base1: float = 0.180
+    h_base2: float = 0.180
+    l_crank1: float = 0.045
+    l_rod1: float = 0.165
+    l_crank2: float = 0.045
+    l_rod2: float = 0.165
     w_foot: float = 0.060
     x_foot: float = -0.030
     z_foot: float = -0.020
+    l_crank: float = 0.045
+    l_rod: float = 0.165
 
 
 @dataclass(frozen=True)
@@ -126,8 +132,10 @@ class AnkleMechanism:
     def __init__(self, params: Params | None = None) -> None:
         self.params = params or Params()
         p = self.params
-        self.a1 = np.array([p.x_base, p.w_base / 2.0, p.h_base])
-        self.a2 = np.array([p.x_base, -p.w_base / 2.0, p.h_base])
+        h1 = getattr(p, "h_base1", p.h_base)
+        h2 = getattr(p, "h_base2", p.h_base)
+        self.a1 = np.array([p.x_base, p.w_base / 2.0, h1])
+        self.a2 = np.array([p.x_base, -p.w_base / 2.0, h2])
         self.u = np.array([0.0, 1.0, 0.0])
         self.v = np.array([0.0, 0.0, -1.0])
         self.w = np.cross(self.u, self.v)
@@ -139,27 +147,31 @@ class AnkleMechanism:
         return r @ self.c1_p, r @ self.c2_p
 
     def crank_tips(self, theta1: float, theta2: float) -> tuple[Vec3, Vec3]:
-        lc = self.params.l_crank
-        b1 = self.a1 + lc * (cos(theta1) * self.v + sin(theta1) * self.w)
-        b2 = self.a2 + lc * (cos(theta2) * self.v + sin(theta2) * self.w)
+        p = self.params
+        lc1 = p.l_crank1
+        lc2 = p.l_crank2
+        b1 = self.a1 + lc1 * (cos(theta1) * self.v + sin(theta1) * self.w)
+        b2 = self.a2 + lc2 * (cos(theta2) * self.v + sin(theta2) * self.w)
         return b1, b2
 
     def solve_ik(self, pitch: float, roll: float) -> IKResult:
         c1, c2 = self.platform_points(pitch, roll)
         p = self.params
-        ok1, theta1, disc1 = _solve_chain(c1, self.a1, self.v, self.w, p.l_crank, p.l_rod)
-        ok2, theta2, disc2 = _solve_chain(c2, self.a2, self.v, self.w, p.l_crank, p.l_rod)
+        ok1, theta1, disc1 = _solve_chain(c1, self.a1, self.v, self.w, p.l_crank1, p.l_rod1)
+        ok2, theta2, disc2 = _solve_chain(c2, self.a2, self.v, self.w, p.l_crank2, p.l_rod2)
         return IKResult(ok1 and ok2, theta1, theta2, disc1, disc2)
 
     def solve_fk(self, theta1: float, theta2: float, guess: tuple[float, float] = (0.0, 0.0)) -> FKResult:
         b1, b2 = self.crank_tips(theta1, theta2)
-        l_rod_sq = self.params.l_rod**2
+        p = self.params
+        l_rod1_sq = p.l_rod1**2
+        l_rod2_sq = p.l_rod2**2
         pitch, roll = guess
         residual = float("inf")
         for _ in range(24):
             c1, c2 = self.platform_points(pitch, roll)
-            f1 = float((c1 - b1) @ (c1 - b1)) - l_rod_sq
-            f2 = float((c2 - b2) @ (c2 - b2)) - l_rod_sq
+            f1 = float((c1 - b1) @ (c1 - b1)) - l_rod1_sq
+            f2 = float((c2 - b2) @ (c2 - b2)) - l_rod2_sq
             residual = max(abs(f1), abs(f2))
             if residual < 1e-10:
                 return FKResult(True, pitch, roll, residual)
