@@ -22,13 +22,14 @@ export interface CameraPose {
   yaw: number;
   pitch: number;
   dist: number;
+  projection: 'perspective' | 'ortho';
 }
 
 export const VIEW_PRESETS: Record<ViewPreset, CameraPose> = {
-  iso: { yaw: -0.75, pitch: 0.35, dist: 0.58 },
-  side: { yaw: -Math.PI / 2, pitch: 0.05, dist: 0.55 },
-  front: { yaw: 0, pitch: 0.05, dist: 0.55 },
-  top: { yaw: -0.0001, pitch: Math.PI / 2 - 0.02, dist: 0.6 }
+  iso: { yaw: -0.75, pitch: 0.35, dist: 0.58, projection: 'perspective' },
+  side: { yaw: -Math.PI / 2, pitch: 0, dist: 0.55, projection: 'ortho' },
+  front: { yaw: 0, pitch: 0, dist: 0.55, projection: 'ortho' },
+  top: { yaw: 0, pitch: Math.PI / 2, dist: 0.6, projection: 'ortho' }
 };
 
 export const POSE_LIMITS = {

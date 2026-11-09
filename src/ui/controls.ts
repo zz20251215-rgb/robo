@@ -30,6 +30,7 @@ function readParam(state: WorkbenchState, key: string): number {
 /** Binds declarative controls to workbench intents and mirrors state back. */
 export class Controls {
   private readonly paramInputs: HTMLInputElement[];
+  private readonly paramNumbers: HTMLInputElement[];
   private readonly loadInputs: HTMLInputElement[];
   private readonly linkToggle: HTMLInputElement;
   private readonly pitch: HTMLInputElement;
@@ -45,6 +46,7 @@ export class Controls {
     private readonly handlers: ControlHandlers
   ) {
     this.paramInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-param]')];
+    this.paramNumbers = [...document.querySelectorAll<HTMLInputElement>('input[data-param-number]')];
     this.loadInputs = [...document.querySelectorAll<HTMLInputElement>('input[data-load]')];
     this.linkToggle = must('#link-chains');
     this.pitch = must('#slider-pitch');
@@ -62,8 +64,12 @@ export class Controls {
       const key = input.dataset.param as string;
       const mm = Math.round(readParam(state, key) * 1000);
       if (input.value !== String(mm)) input.value = String(mm);
-      const output = document.querySelector<HTMLElement>(`[data-param-value="${key}"]`);
-      if (output) output.textContent = `${mm}`;
+    }
+    for (const input of this.paramNumbers) {
+      if (document.activeElement === input) continue;
+      const key = input.dataset.paramNumber as string;
+      const mm = Math.round(readParam(state, key) * 1000);
+      if (input.value !== String(mm)) input.value = String(mm);
     }
     this.linkToggle.checked = state.linkedChains;
     for (const input of this.loadInputs) {
@@ -102,14 +108,43 @@ export class Controls {
     this.gaitText.textContent = state.walking ? '暂停演示' : '步态演示';
   }
 
+  private applyParam(key: string, meters: number): void {
+    const [scope, field] = key.split('.');
+    if (scope === 'shared') this.wb.setSharedParam(field as SharedField, meters);
+    else this.wb.setChainParam(scope === 'A' ? 'A' : 'B', field as ChainField, meters);
+  }
+
   private bind(): void {
     for (const input of this.paramInputs) {
       input.addEventListener('input', () => {
-        const [scope, field] = (input.dataset.param as string).split('.');
         const meters = Number(input.value) / 1000;
-        if (!Number.isFinite(meters)) return;
-        if (scope === 'shared') this.wb.setSharedParam(field as SharedField, meters);
-        else this.wb.setChainParam(scope === 'A' ? 'A' : 'B', field as ChainField, meters);
+        if (Number.isFinite(meters)) this.applyParam(input.dataset.param as string, meters);
+      });
+    }
+
+    const ranges = new Map(this.paramInputs.map((range) => [range.dataset.param as string, range]));
+    for (const input of this.paramNumbers) {
+      const key = input.dataset.paramNumber as string;
+      const commit = (): void => {
+        const stored = Math.round(readParam(this.wb.state, key) * 1000);
+        const text = input.value.trim();
+        if (text === '' || !Number.isFinite(Number(text))) {
+          input.value = String(stored);
+          return;
+        }
+        const range = ranges.get(key);
+        const low = range ? Number(range.min) : -Infinity;
+        const high = range ? Number(range.max) : Infinity;
+        const mm = Math.min(high, Math.max(low, Math.round(Number(text))));
+        input.value = String(mm);
+        if (mm !== stored) this.applyParam(key, mm / 1000);
+      };
+      input.addEventListener('change', commit);
+      input.addEventListener('focus', () => input.select());
+      input.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        commit();
+        input.blur();
       });
     }
     this.linkToggle.addEventListener('change', () => this.wb.setLinkChains(this.linkToggle.checked));

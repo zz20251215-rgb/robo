@@ -66,7 +66,10 @@
 
               <p class="param-group">共用基准</p>
               <div class="field compact">
-                <label for="param-anchor-h">足端铰点高度<output data-param-value="shared.anchorHeight">-20</output></label>
+                <div class="field-head">
+                  <label for="param-anchor-h">足端铰点高度</label>
+                  <input class="num" type="number" inputmode="numeric" data-param-number="shared.anchorHeight" value="-20" aria-label="足端铰点高度（mm）" />
+                </div>
                 <input type="range" id="param-anchor-h" data-param="shared.anchorHeight" min="-50" max="10" step="1" value="-20" />
               </div>
 
@@ -75,65 +78,107 @@
                 <p class="param-group">支链 B · −Y 侧</p>
 
                 <div class="field compact">
-                  <label for="param-a-mount">安装高度<output data-param-value="A.baseZ">185</output></label>
+                  <div class="field-head">
+                    <label for="param-a-mount">安装高度</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.baseZ" value="185" aria-label="A 链安装高度（mm）" />
+                  </div>
                   <input type="range" id="param-a-mount" data-param="A.baseZ" min="110" max="280" step="1" value="185" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-mount">安装高度<output data-param-value="B.baseZ">180</output></label>
+                  <div class="field-head">
+                    <label for="param-b-mount">安装高度</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.baseZ" value="180" aria-label="B 链安装高度（mm）" />
+                  </div>
                   <input type="range" id="param-b-mount" data-param="B.baseZ" min="110" max="280" step="1" value="180" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-basex">电机 X<output data-param-value="A.baseX">-40</output></label>
+                  <div class="field-head">
+                    <label for="param-a-basex">电机 X</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.baseX" value="-40" aria-label="A 链电机 X（mm）" />
+                  </div>
                   <input type="range" id="param-a-basex" data-param="A.baseX" min="-80" max="20" step="1" value="-40" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-basex">电机 X<output data-param-value="B.baseX">-40</output></label>
+                  <div class="field-head">
+                    <label for="param-b-basex">电机 X</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.baseX" value="-40" aria-label="B 链电机 X（mm）" />
+                  </div>
                   <input type="range" id="param-b-basex" data-param="B.baseX" min="-80" max="20" step="1" value="-40" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-basey">电机 Y<output data-param-value="A.baseY">35</output></label>
+                  <div class="field-head">
+                    <label for="param-a-basey">电机 Y</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.baseY" value="35" aria-label="A 链电机 Y（mm）" />
+                  </div>
                   <input type="range" id="param-a-basey" data-param="A.baseY" min="10" max="80" step="1" value="35" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-basey">电机 Y<output data-param-value="B.baseY">-35</output></label>
+                  <div class="field-head">
+                    <label for="param-b-basey">电机 Y</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.baseY" value="-35" aria-label="B 链电机 Y（mm）" />
+                  </div>
                   <input type="range" id="param-b-basey" data-param="B.baseY" min="-80" max="-10" step="1" value="-35" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-crank">曲柄<output data-param-value="A.crank">45</output></label>
+                  <div class="field-head">
+                    <label for="param-a-crank">曲柄</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.crank" value="45" aria-label="A 链曲柄半径（mm）" />
+                  </div>
                   <input type="range" id="param-a-crank" data-param="A.crank" min="25" max="80" step="1" value="45" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-crank">曲柄<output data-param-value="B.crank">45</output></label>
+                  <div class="field-head">
+                    <label for="param-b-crank">曲柄</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.crank" value="45" aria-label="B 链曲柄半径（mm）" />
+                  </div>
                   <input type="range" id="param-b-crank" data-param="B.crank" min="25" max="80" step="1" value="45" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-rod">连杆<output data-param-value="A.rod">165</output></label>
+                  <div class="field-head">
+                    <label for="param-a-rod">连杆</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.rod" value="165" aria-label="A 链连杆长度（mm）" />
+                  </div>
                   <input type="range" id="param-a-rod" data-param="A.rod" min="100" max="260" step="1" value="165" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-rod">连杆<output data-param-value="B.rod">165</output></label>
+                  <div class="field-head">
+                    <label for="param-b-rod">连杆</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.rod" value="165" aria-label="B 链连杆长度（mm）" />
+                  </div>
                   <input type="range" id="param-b-rod" data-param="B.rod" min="100" max="260" step="1" value="165" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-anchorx">铰点 X<output data-param-value="A.anchorX">-30</output></label>
+                  <div class="field-head">
+                    <label for="param-a-anchorx">铰点 X</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.anchorX" value="-30" aria-label="A 链铰点 X（mm）" />
+                  </div>
                   <input type="range" id="param-a-anchorx" data-param="A.anchorX" min="-60" max="60" step="1" value="-30" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-anchorx">铰点 X<output data-param-value="B.anchorX">-30</output></label>
+                  <div class="field-head">
+                    <label for="param-b-anchorx">铰点 X</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.anchorX" value="-30" aria-label="B 链铰点 X（mm）" />
+                  </div>
                   <input type="range" id="param-b-anchorx" data-param="B.anchorX" min="-60" max="60" step="1" value="-30" />
                 </div>
 
                 <div class="field compact">
-                  <label for="param-a-anchory">铰点 Y<output data-param-value="A.anchorY">30</output></label>
+                  <div class="field-head">
+                    <label for="param-a-anchory">铰点 Y</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="A.anchorY" value="30" aria-label="A 链铰点 Y（mm）" />
+                  </div>
                   <input type="range" id="param-a-anchory" data-param="A.anchorY" min="10" max="34" step="1" value="30" />
                 </div>
                 <div class="field compact">
-                  <label for="param-b-anchory">铰点 Y<output data-param-value="B.anchorY">-30</output></label>
+                  <div class="field-head">
+                    <label for="param-b-anchory">铰点 Y</label>
+                    <input class="num" type="number" inputmode="numeric" data-param-number="B.anchorY" value="-30" aria-label="B 链铰点 Y（mm）" />
+                  </div>
                   <input type="range" id="param-b-anchory" data-param="B.anchorY" min="-34" max="-10" step="1" value="-30" />
                 </div>
               </div>

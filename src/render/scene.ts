@@ -26,8 +26,8 @@ interface Screen {
 
 /**
  * Hand-rolled 3D ball-and-stick renderer for one mechanism pose.
- * Orthographic-ish perspective identical to the original projection, with a
- * quieter palette and depth-cued line widths.
+ * Isometric view uses perspective; front/side/top use parallel projection so
+ * symmetric chains project exactly onto each other.
  */
 export class SceneView {
   private readonly canvas: HTMLCanvasElement;
@@ -118,7 +118,7 @@ export class SceneView {
   }
 
   private project(point: Vec3): Screen {
-    const { yaw, pitch, dist } = this.cam;
+    const { yaw, pitch, dist, projection } = this.cam;
     const cy = Math.cos(yaw);
     const sy = Math.sin(yaw);
     const x1 = point[0] * cy - point[1] * sy;
@@ -130,7 +130,7 @@ export class SceneView {
     const z2 = y1 * sp + z1 * cp;
     const camZ = Math.max(0.08, y2 + dist);
     const fov = Math.min(this.width, this.height) * 0.78;
-    const scale = fov / camZ;
+    const scale = projection === 'ortho' ? fov / dist : fov / camZ;
     return {
       x: this.width / 2 + (x1 + this.pan.x) * scale,
       y: this.height / 2 - (z2 + this.pan.y) * scale,
@@ -489,21 +489,29 @@ export class SceneView {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(148,163,184,0.85)';
-    const entries: Array<[Vec3, string]> = [
-      [A1, 'A₁'],
-      [A2, 'A₂'],
-      [C1, 'C₁'],
-      [C2, 'C₂']
+    const gapOf = (p: Vec3, q: Vec3): number => {
+      const a = this.project(p);
+      const b = this.project(q);
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    };
+    const aStacked = gapOf(A1, A2) < 16;
+    const cStacked = gapOf(C1, C2) < 16;
+    const entries: Array<[Vec3, string, number]> = [
+      [A1, 'A₁', -7],
+      [A2, 'A₂', aStacked ? 10 : -7],
+      [C1, 'C₁', -7],
+      [C2, 'C₂', cStacked ? 10 : -7]
     ];
-    for (const [point, label] of entries) {
+    for (const [point, label, dy] of entries) {
       const p = this.project(point);
-      ctx.fillText(label, p.x + 7, p.y - 7);
+      ctx.fillText(label, p.x + 7, p.y + dy);
     }
     if (state.showMotorAxes) {
       const b1 = this.project(B1);
       const b2 = this.project(B2);
+      const bStacked = gapOf(B1, B2) < 16;
       ctx.fillStyle = 'rgba(56,189,248,0.9)';
-      ctx.fillText('B₁', b1.x + 7, b1.y + 8);
+      ctx.fillText('B₁', b1.x + 7, b1.y + (bStacked ? -9 : 8));
       ctx.fillStyle = 'rgba(251,191,36,0.9)';
       ctx.fillText('B₂', b2.x + 7, b2.y + 8);
     }
